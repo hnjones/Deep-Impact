@@ -165,6 +165,24 @@ class Planet():
             kinetic energy lost per unit altitude
 
         """
+        # calculate the kinetic energy
+        kinetic_energy = 0.5 * result['mass'] * result['velocity']**2
+
+        # Convert kinetic energy from Joules to kilotons of TNT
+        # 1 kt TNT = 4.184e12 Joules
+        kinetic_energy_kt = kinetic_energy / 4.184e12
+
+        # Calculate the energy difference between successive steps
+        energy_diff = np.diff(kinetic_energy_kt, prepend=np.nan)
+
+        # Calculate the altitude difference between successive steps
+        altitude_diff = np.diff(result['altitude'], prepend=np.nan)
+
+        # Avoid division by zero by replacing zeros with NaN (or a very small number)
+        altitude_diff[altitude_diff == 0] = np.nan
+        
+        # Calculate dedz, convert from per meter to per kilometer
+        result['dedz'] = energy_diff / (altitude_diff / 1000)
 
         # Replace these lines with your code to add the dedz column to
         # the result DataFrame
