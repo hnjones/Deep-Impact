@@ -128,12 +128,12 @@ def impact_risk_plot(probability, population):
     data_post = pd.read_csv(os.sep.join((os.path.dirname(__file__),
                                          '..', 'resources',
                                          'full_postcodes.csv')))
-    probability_new = pd.DataFrame({'Postcode':probability.columns.tolist(), 'probability':probability.iloc[0].tolist()})
-    data_with_weights =  pd.merge(probability_new, data_post[['Postcode', 'Latitude', 'Longitude']], on='Postcode', how='left')
-    m = folium.Map(location=[data_with_weights.Latitude[0], data_with_weights.Longitude[0]], zoom_start=13)
-    HeatMap(data_with_weights[['Latitude', 'Longitude','probability']].values.tolist(), gradient={0.4: 'blue', 0.65: 'lime', 1: 'red'}, radius=15, blur=10).add_to(m)
+    probability_new = pd.DataFrame({'Postcode':probability.columns.tolist(),
+                                    'probability':probability.iloc[0].tolist()})
+    data_with_weights =  pd.merge(probability_new, data_post[['Postcode', 'Latitude', 'Longitude']],
+                                  on='Postcode', how='left')
+    m = folium.Map(location=[data_with_weights.Latitude[0],
+                             data_with_weights.Longitude[0]], zoom_start=13)
+    HeatMap(data_with_weights[['Latitude', 'Longitude','probability']].values.tolist(),
+            gradient={0.4: 'blue', 0.65: 'lime', 1: 'red'}, radius=15, blur=10).add_to(m)
     m.save("weighted_heatmap.html")
-
-probability=pd.DataFrame({'AB101BD':0.5,'AB155LP':0.8},index=range(1))
-impact_risk_plot(probability,None)
-
