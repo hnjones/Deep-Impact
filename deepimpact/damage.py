@@ -6,7 +6,7 @@ from locator import GeospatialLocator
 import folium
 import numpy as np
 from folium.plugins import HeatMap
-
+import math
 __all__ = ['damage_zones', 'impact_risk']
 
 
@@ -51,13 +51,79 @@ def damage_zones(outcome, lat, lon, bearing, pressures):
                                 pressures=[1e3, 3.5e3, 27e3, 43e3])
     """
 
+    
     # Replace this code with your own. For demonstration we just
     # return lat, lon and a radius of 5000 m for each pressure
-    blat = lat
-    blon = lon
-    damrad = [5000.] * len(pressures)
+    burst_altitude = outcome['burst_altitude']
+    burst_energy = outcome['burst_energy']
+    burst_distance = outcome.get('burst_distance', 0)  # default to 0 if not found
 
+    # Calculate the surface zero point
+    blat, blon = find_destination(lat, lon, bearing, burst_distance)
+
+    # Calculate damage radii for each pressure threshold
+    damrad = calculate_damage_radius(pressures, burst_altitude, burst_energy)
+    
     return blat, blon, damrad
+
+
+def find_destination(lat, lon, bearing, distance):
+    """
+    Find the destination point given starting latitude, longitude, bearing and distance.
+    Assumes a spherical Earth.
+    """
+    R = 6371000  # Radius of the Earth in meters
+    bearing = math.radians(bearing)  # Convert bearing to radians
+
+    phi1 = math.radians(lat)  # Current lat point converted to radians
+    lambda1 = math.radians(lon)  # Current long point converted to radians
+
+    sin_phi2 = math.sin(phi1) * math.cos(distance/R) + math.cos(phi1) * math.sin(distance/R) * math.cos(bearing)
+    lat2 = math.asin(sin_phi2)
+
+    tan_lambda = (math.sin(bearing) * math.sin(distance/R) * math.cos(phi1))/ (math.cos(distance/R) - math.sin(phi1) * math.sin(lat2))
+    lon2 = math.atan(tan_lambda) + lambda1
+
+    return math.degrees(lat2), math.degrees(lon2)
+
+def calculate_damage_radius(target_pressures, z_b, E_k):
+    def p(r, z_b, E_k):
+        term1 = 3e11 * np.power((r**2 + z_b**2) / np.power(E_k, 2/3), -1.3)
+        term2 = 2e7 * np.power((r**2 + z_b**2) / np.power(E_k, 2/3), -0.57)
+        return term1 + term2
+
+    def dp(r, z_b, E_k):
+        term1 = -1.3 * 3e11 * np.power((r**2 + z_b**2) / np.power(E_k, 2/3), -2.3) * (2 * r / np.power(E_k, 2/3))
+        term2 = -0.57 * 2e7 * np.power((r**2 + z_b**2) / np.power(E_k, 2/3), -1.57) * (2 * r / np.power(E_k, 2/3))
+        return term1 + term2
+
+    def newtons_method(target_pressure, z_b, E_k, initial_guess= 10000, tolerance=1e-6, max_iterations=100):
+        r = initial_guess
+
+        for iteration in range(max_iterations):
+            pressure_value = p(r, z_b, E_k)
+            pressure_diff = pressure_value - target_pressure
+
+            if abs(pressure_diff) < tolerance:
+                print(f"Converged after {iteration} iterations.")
+                return r
+
+            derivative = dp(r, z_b, E_k)
+
+            if derivative == 0:
+                # Avoid division by zero
+                print("Derivative is zero. Stopping.")
+                break
+
+            r -= pressure_diff / derivative
+
+        raise ValueError("Newton's method did not converge within the maximum number of iterations.")
+
+    radii=[]
+    for i in target_pressures:
+        radii.append(newtons_method(i,z_b,E_k))
+    flipped_list = radii[::-1]
+    return flipped_list
 
 
 def impact_risk(planet,
@@ -97,6 +163,7 @@ def impact_risk(planet,
         population affected by the impact, with keys 'mean' and 'stdev'.
         Values are floats.
     """
+
 
     data = pd.read_csv(impact_file)
     data=data.iloc[:nsamples]
@@ -160,3 +227,4 @@ def impact_risk_plot(probability, population):
     HeatMap(data_with_weights[['Latitude', 'Longitude','probability']].values.tolist(),
             gradient={0.4: 'blue', 0.65: 'lime', 1: 'red'}, radius=15, blur=10).add_to(m)
     m.save("weighted_heatmap.html")
+
