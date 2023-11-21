@@ -6,6 +6,7 @@ import os
 import numpy as np
 import pandas as pd
 
+
 __all__ = ['Planet']
 
 
@@ -79,9 +80,10 @@ class Planet():
         try:
             # set function to define atmoshperic density
             if atmos_func == 'exponential':
-                raise NotImplementedError
+                self.rhoa = lambda z: rho0 * np.exp(-z / H)
             elif atmos_func == 'tabular':
-                raise NotImplementedError
+                self.read_csv()
+                self.rhoa = lambda x: self.linear_interpolate(x)
             elif atmos_func == 'constant':
                 self.rhoa = lambda x: rho0
             else:
@@ -93,83 +95,108 @@ class Planet():
             print("Falling back to constant density atmosphere for now")
             self.rhoa = lambda x: rho0
 
+    def rk4_step(self, f, y, t, dt):
+        """RK4."""
+        k1 = dt * f(t, y)
+        k2 = dt * f(t + dt / 2, y + k1 / 2)
+        k3 = dt * f(t + dt / 2, y + k2 / 2)
+        k4 = dt * f(t + dt, y + k3)
+        return y + (k1 + 2 * k2 + 2 * k3 + k4) / 6
+
     def solve_atmospheric_entry(
-            self, radius, velocity, density, strength, angle,
-            init_altitude=100e3, dt=0.05, radians=False):
-        """
-        Solve the system of differential equations for a given impact scenario
+        self,
+        radius,
+        velocity,
+        density,
+        strength,
+        angle,
+        init_altitude=100e3,
+        dt=0.25,
+        radians=False,
+    ):
+        if not radians:
+            angle = np.radians(angle)
 
-        Parameters
-        ----------
-        radius : float
-            The radius of the asteroid in meters
+        def equations_of_motion(t, y):
+            v, m, theta, z, x, r = y
+            rho_a = self.rhoa(z)
+            A = np.pi * r**2
 
-        velocity : float
-            The entery speed of the asteroid in meters/second
+            dvdt = (-self.Cd * rho_a * A * v**2) / (2 * m) + self.g * np.sin(theta)
+            dmdt = (-self.Ch * rho_a * A * v**3) / (2 * self.Q)
+            dthetadt = (
+                (self.g * np.cos(theta)) / v
+                - (self.Cl * rho_a * A * v) / (2 * m)
+                - (v * np.cos(theta)) / (self.Rp + z)
+            )
+            dzdt = -v * np.sin(theta)
+            dxdt = (v * np.cos(theta)) / (1 + z / self.Rp)
+            drdt = (
+                np.sqrt((7 / 2) * self.alpha * (rho_a / density)) * v
+                if rho_a * v**2 > strength
+                else 0
+            )
 
-        density : float
-            The density of the asteroid in kg/m^3
+            return np.array([dvdt, dmdt, dthetadt, dzdt, dxdt, drdt])
 
-        strength : float
-            The strength of the asteroid (i.e. the maximum pressure it can
-            take before fragmenting) in N/m^2
+        y0 = np.array(
+            [
+                velocity,
+                density * (4 / 3) * np.pi * radius**3,
+                angle,
+                init_altitude,
+                0,
+                radius,
+            ]
+        )
+        t = 0
+        results = []
+        fragmented = False
+        user_time_elapsed = 0.0  # Initialize the user-specified time elapsed counter
 
-        angle : float
-            The initial trajectory angle of the asteroid to the horizontal
-            By default, input is in degrees. If 'radians' is set to True, the
-            input should be in radians
+        while True:
+            #
+            dt_actual = min(dt, 0.05)
+            y0 = self.rk4_step(equations_of_motion, y0, t, dt_actual)
+            t += dt_actual
+            user_time_elapsed += dt_actual
 
-        init_altitude : float, optional
-            Initial altitude in m
+            if user_time_elapsed >= dt:
+                results.append([t] + list(y0))
+                user_time_elapsed = 0.0  # Reset the user-specified time elapsed counter
 
-        dt : float, optional
-            The output timestep, in s
+            if y0[0] <= 531:
+                break
 
-        radians : logical, optional
-            Whether angles should be given in degrees or radians. Default=False
-            Angles returned in the dataframe will have the same units as the
-            input
+            ram_pressure = self.rhoa(y0[3]) * y0[0] ** 2
+            if ram_pressure > strength:
+                fragmented = True
+            elif fragmented and ram_pressure <= strength:
+                fragmented = False
 
-        Returns
-        -------
-        Result : DataFrame
-            A pandas dataframe containing the solution to the system.
-            Includes the following columns:
-            'velocity', 'mass', 'angle', 'altitude',
-            'distance', 'radius', 'time'
-        """
+        result_df = pd.DataFrame(
+            results,
+            columns=[
+                "time",
+                "velocity",
+                "mass",
+                "angle",
+                "altitude",
+                "distance",
+                "radius",
+            ],
+        )
 
-        # Enter your code here to solve the differential equations
+        # Converts the angle column in the result from radians to degrees
+        result_df["angle"] = np.degrees(result_df["angle"])
 
-        return pd.DataFrame({'velocity': velocity,
-                             'mass': np.nan,
-                             'angle': angle,
-                             'altitude': init_altitude,
-                             'distance': 0.0,
-                             'radius': radius,
-                             'time': 0.0}, index=range(1))
+        return result_df
 
     def calculate_energy(self, result):
-        """
-        Function to calculate the kinetic energy lost per unit altitude in
-        kilotons TNT per km, for a given solution.
-
-        Parameters
-        ----------
-        result : DataFrame
-            A pandas dataframe with columns for the velocity, mass, angle,
-            altitude, horizontal distance and radius as a function of time
-
-        Returns : DataFrame
-            Returns the dataframe with additional column ``dedz`` which is the
-            kinetic energy lost per unit altitude
-
-        """
-        # calculate the kinetic energy
+        # Calculate the kinetic energy
         kinetic_energy = 0.5 * result['mass'] * result['velocity']**2
 
         # Convert kinetic energy from Joules to kilotons of TNT
-        # 1 kt TNT = 4.184e12 Joules
         kinetic_energy_kt = kinetic_energy / 4.184e12
 
         # Calculate the energy difference between successive steps
@@ -178,17 +205,17 @@ class Planet():
         # Calculate the altitude difference between successive steps
         altitude_diff = np.diff(result['altitude'], prepend=np.nan)
 
-        # Avoid division by zero by replacing zeros with NaN (or a very small number)
+        # Avoid division by zero by replacing zeros with NaN
         altitude_diff[altitude_diff == 0] = np.nan
-        
+            
         # Calculate dedz, convert from per meter to per kilometer
-        result['dedz'] = energy_diff / (altitude_diff / 1000)
+        dedz = energy_diff / (altitude_diff / 1000)
 
-        # Replace these lines with your code to add the dedz column to
-        # the result DataFrame
-        result = result.copy()
-        result.insert(len(result.columns),
-                      'dedz', np.array(np.nan))
+        # Update or create the 'dedz' column
+        if 'dedz' in result.columns:
+            result['dedz'] = dedz
+        else:
+            result.insert(len(result.columns), 'dedz', dedz)
 
         return result
 
@@ -219,4 +246,42 @@ class Planet():
                    'burst_altitude': 0.,
                    'burst_distance': 0.,
                    'burst_energy': 0.}
+        # Check if the DataFrame is empty
+        if result.empty:
+            return outcome
+
+        # Find the index of the maximum energy deposition rate
+        max_dedz_idx = result['dedz'].idxmax()
+        max_dedz = result.loc[max_dedz_idx, 'dedz']
+
+        # Check if the max energy deposition occurs at an altitude above 0
+        if result.loc[max_dedz_idx, 'altitude'] > 0:
+            outcome['outcome'] = 'Airburst'
+            outcome['burst_peak_dedz'] = max_dedz
+            outcome['burst_altitude'] = result.loc[max_dedz_idx, 'altitude']
+            outcome['burst_distance'] = result.loc[max_dedz_idx, 'distance']
+            outcome['burst_energy'] = result.loc[max_dedz_idx, 'dedz']
+        else:
+            outcome['outcome'] = 'Cratering'
+            # For cratering, determine the specifics at the point of ground impact
+
         return outcome
+    
+    def read_csv(self):
+        self.altitudes = []
+        self.densities = []
+        with open(self.atmos_filename, 'r') as file:
+            next(file)  # Skip the header line
+            for line in file:
+                if line.strip():  # Check if line is not empty
+                    parts = line.split()
+                    self.altitudes.append(float(parts[0]))  # Altitude value
+                    self.densities.append(float(parts[1]))  # Density value
+
+
+    def linear_interpolate(self, x):
+        for i in range(len(self.altitudes) - 1):
+            if self.altitudes[i] <= x <= self.altitudes[i + 1]:
+                return self.densities[i] + (self.densities[i + 1] - self.densities[i]) * \
+                       (x - self.altitudes[i]) / (self.altitudes[i + 1] - self.altitudes[i])
+        return None  # Return None or handle extrapolation
