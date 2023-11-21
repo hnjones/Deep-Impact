@@ -2,7 +2,7 @@
 from collections import Counter
 import os
 import pandas as pd
-import locator
+from locator import GeospatialLocator
 import folium
 import numpy as np
 from folium.plugins import HeatMap
@@ -114,7 +114,7 @@ def impact_risk(planet,
                                                       lon=data.loc[i,'entry longitude'],
                                                       bearing=data.loc[i,'bearing'],
                                                       pressures=pressure)
-        locators = locator.GeospatialLocator()
+        locators = GeospatialLocator()
         postcodes = locators.get_postcodes_by_radius((blast_lat, blast_lon),radii=damage_rad)[0]
         population = locators.get_population_by_radius((blast_lat, blast_lon),radii=damage_rad)[0]
         postcodes_all=postcodes_all + postcodes
