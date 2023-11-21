@@ -99,6 +99,7 @@ def impact_risk(planet,
     """
 
     data = pd.read_csv(impact_file)
+    data=data.iloc[:nsamples]
     postcodes_all=[]
     population_all=[]
     for i in range(data.shape[0]):
@@ -125,6 +126,28 @@ def impact_risk(planet,
             {'mean': np.mean(population_all), 'stdev': np.std(population_all)})
 
 def impact_risk_plot(probability, population):
+
+    """
+    Plot the probability of postcodes using heatmap.
+
+    Parameters
+    ----------
+    probability: DataFrame
+        A pandas DataFrame with columns for postcode and the
+        probability the postcode was inside the blast radius.
+    population: dict
+        A dictionary containing the mean and standard deviation of the
+        population affected by the impact, with keys 'mean' and 'stdev'.
+        Values are floats.
+
+    Returns
+    -------
+    weighted_heatmap:html
+        A html saved in local to show the probability of different postcode 
+        impacted by the scenario.
+
+    """
+        
     data_post = pd.read_csv(os.sep.join((os.path.dirname(__file__),
                                          '..', 'resources',
                                          'full_postcodes.csv')))
