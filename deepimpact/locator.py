@@ -2,6 +2,7 @@
 
 import numpy as np
 import pandas as pd
+import os
 
 __all__ = ['GeospatialLocator', 'great_circle_distance']
 
@@ -66,8 +67,12 @@ class GeospatialLocator(object):
     Class to interact with a postcode database file and a population grid file.
     """
 
-    def __init__(self, postcode_file='',
-                 census_file='',
+    def __init__(self, postcode_file = os.sep.join((os.path.dirname(__file__), '..',
+                                             'resources',
+                                             'full_postcodes.csv')),
+                 census_file = os.sep.join((os.path.dirname(__file__), '..',
+                                             'resources',
+                                             'UK_residential_population_2011_latlon.asc')),
                  norm=great_circle_distance):
         """
         Parameters
