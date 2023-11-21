@@ -2,7 +2,6 @@
 import pandas as pd
 import os
 import math
-import mpmath
 import numpy as np
 __all__ = ['damage_zones', 'impact_risk']
 
@@ -114,8 +113,6 @@ def calculate_damage_radius(target_pressures, z_b, E_k):
 
             r -= pressure_diff / derivative
 
-            # Print information for debugging
-            print(f"Iteration {iteration}: r = {r}, pressure = {pressure_value}, derivative = {derivative}")
         raise ValueError("Newton's method did not converge within the maximum number of iterations.")
 
     radii=[]
