@@ -83,7 +83,7 @@ class Planet():
                 self.rhoa = lambda z: rho0 * np.exp(-z / H)
             elif atmos_func == 'tabular':
                 self.read_csv()
-                self.rhoa = lambda x: self.linear_interpolate(x)
+                self.rhoa = lambda x: self.linear_interpolate_np(x)
             elif atmos_func == 'constant':
                 self.rhoa = lambda x: rho0
             else:
@@ -268,20 +268,19 @@ class Planet():
         return outcome
     
     def read_csv(self):
-        self.altitudes = []
-        self.densities = []
         with open(self.atmos_filename, 'r') as file:
             next(file)  # Skip the header line
-            for line in file:
-                if line.strip():  # Check if line is not empty
-                    parts = line.split()
-                    self.altitudes.append(float(parts[0]))  # Altitude value
-                    self.densities.append(float(parts[1]))  # Density value
+            data = np.loadtxt(file)
+            self.altitudes = data[:, 0]
+            self.densities = data[:, 1]
 
-
-    def linear_interpolate(self, x):
-        for i in range(len(self.altitudes) - 1):
-            if self.altitudes[i] <= x <= self.altitudes[i + 1]:
-                return self.densities[i] + (self.densities[i + 1] - self.densities[i]) * \
-                       (x - self.altitudes[i]) / (self.altitudes[i + 1] - self.altitudes[i])
-        return None  # Return None or handle extrapolation
+    def linear_interpolate_np(self, x):
+        # Find indices where to insert x for maintaining order
+        i = np.searchsorted(self.altitudes, x, side='right') - 1
+        if i < 0 or i >= len(self.altitudes) - 1:
+            return None  # x is out of the bounds of the data
+        
+        # Perform the interpolation
+        x0, x1 = self.altitudes[i], self.altitudes[i + 1]
+        y0, y1 = self.densities[i], self.densities[i + 1]
+        return y0 + (y1 - y0) * (x - x0) / (x1 - x0)
