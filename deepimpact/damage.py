@@ -278,21 +278,22 @@ def impact_risk(
         population = locators.get_population_by_radius(
             (blast_lat, blast_lon), radii=damage_rad
         )
-        postcodes_all = postcodes_all + postcodes[-1]
-        population_all.append(population[-1])
+        if len(postcodes) != 0:
+            postcodes_all=postcodes_all + postcodes[-1]
+            population_all.append(population[-1])
         print(f"data{i}end")
     element_counts = Counter(postcodes_all)
-    postcodes_pos = {
-        key: count / data.shape[0] for key, count in element_counts.items()
-    }
+    postcodes_code = list(element_counts.keys())
+    postcodes_prob = list(element_counts.values())
+    postcodes_prob = [i/data.shape[0] for i in postcodes_prob]
 
     return (
-        pd.DataFrame(postcodes_pos, index=range(1)),
-        {"mean": np.mean(population_all), "stdev": np.std(population_all)},
+        pd.DataFrame({'Postcode': postcodes_code, 'probability': postcodes_prob}),
+        {"mean": float(np.mean(population_all)), "stdev": float(np.std(population_all))},
     )
 
 
-def impact_risk_plot(probability, population):
+def impact_risk_plot(probability):
 
     """
     Plot the probability of postcodes using heatmap.
@@ -319,14 +320,8 @@ def impact_risk_plot(probability, population):
             (os.path.dirname(__file__), "..", "resources", "full_postcodes.csv")
         )
     )
-    probability_new = pd.DataFrame(
-        {
-            "Postcode": probability.columns.tolist(),
-            "probability": probability.iloc[0].tolist(),
-        }
-    )
     data_with_weights = pd.merge(
-        probability_new,
+        probability,
         data_post[["Postcode", "Latitude", "Longitude"]],
         on="Postcode",
         how="left",
