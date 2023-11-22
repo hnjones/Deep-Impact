@@ -83,7 +83,7 @@ class Planet():
                 self.rhoa = lambda z: rho0 * np.exp(-z / H)
             elif atmos_func == 'tabular':
                 self.read_csv()
-                self.rhoa = lambda x: self.interpolate_density()
+                self.rhoa = lambda x: self.interpolate_density(x)
             elif atmos_func == 'constant':
                 self.rhoa = lambda x: rho0
             else:
