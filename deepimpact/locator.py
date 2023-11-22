@@ -3,6 +3,7 @@
 import numpy as np
 import pandas as pd
 import os
+from scipy.spatial import KDTree
 
 __all__ = ["GeospatialLocator", "great_circle_distance"]
 
@@ -36,6 +37,11 @@ def great_circle_distance(latlon1, latlon2):
         print(great_circle_distance([[54.0, 0.0], [55, 0.0]], [55, 1.0]))
     [1.286e+05 6.378e+04]
     """
+
+    # Ensure latlon1 and latlon2 are at least 2-dimensional
+    latlon1 = np.atleast_2d(latlon1)
+    latlon2 = np.atleast_2d(latlon2)
+
     # Converting latitudes and longitudes from degrees to radians
     latlon1_rad = np.radians(latlon1)
     latlon2_rad = np.radians(latlon2)
@@ -191,6 +197,55 @@ class GeospatialLocator(object):
 
         return df
 
+    def find_nearest_coordinates(self, X, num_coords):
+        # Convert census data to a KDTree for efficient nearest neighbor search
+        tree = KDTree(self.census[["Latitude", "Longitude"]].values)
+
+        # Query the tree for the nearest neighbors
+        distances, indices = tree.query(X, k=num_coords)
+
+        # Retrieve the nearest coordinates and their distances
+        nearest_coords = self.census.iloc[indices][["Latitude",
+                                                    "Longitude"]].values
+        near_dist = [self.norm([X], [coord])[0, 0] for coord in nearest_coords]
+
+        return nearest_coords, near_dist
+
+    def calculate_impacted_population(self, radius,
+                                      grid_centers, grid_distances):
+        impacted_populations = 0
+        # Calculate the half-diagonal of the square grid
+        half_diagonal = np.sqrt(2 * (500**2))
+
+        for grid_center, distance in zip(grid_centers, grid_distances):
+            # Initialize the intersection percentage
+            intersection_percentage = 0
+
+            # Check if the grid intersects with the circle
+            if distance <= radius + half_diagonal:
+                if distance <= radius - half_diagonal:
+                    # The entire grid is inside the circle
+                    intersection_percentage = 1
+                else:
+                    # Partial intersection - this is a rough approximation
+                    intersection_percentage = max(
+                        0,
+                        1 - (distance -
+                             (radius - half_diagonal)) / (2 * half_diagonal),
+                    )
+
+            # Retrieve the population for the grid center from the census data
+            grid_population = self.census[
+                (self.census["Latitude"] == grid_center[0])
+                & (self.census["Longitude"] == grid_center[1])
+            ]["Population"].values[0]
+
+            # Calculate the impacted population from intersection percentage
+            impacted_pop = grid_population * intersection_percentage
+            impacted_populations += impacted_pop
+
+        return impacted_populations
+
     def get_population_by_radius(self, X, radii):
         """
         Return the population within specific distances of input location.
@@ -221,10 +276,23 @@ class GeospatialLocator(object):
 
         populations_by_radius = []
         for radius in radii:
+            if radius <= 0:
+                populations_by_radius.append(0)
+                continue
+
             # Sum population for points within the radius
             total_population = self.census[self.census["distance"] <= radius][
                 "Population"
             ].sum()
+
+            if total_population == 0:
+                # Find the 4 nearest coordinates
+                nearest_coords, distance = self.find_nearest_coordinates(X, 4)
+
+                total_population = self.calculate_impacted_population(
+                    radius, nearest_coords, distance
+                )
+
             populations_by_radius.append(int(total_population))
 
         return populations_by_radius
