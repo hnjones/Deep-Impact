@@ -85,44 +85,87 @@ def find_destination(lat, lon, bearing, distance):
 
     return math.degrees(lat2), math.degrees(lon2)
 
+def p(r, z_b, E_k,pressure):
+            term1 = 3e11 * np.power((r**2 + z_b**2) / np.power(E_k, 2/3), -1.3)
+            term2 = 2e7 * np.power((r**2 + z_b**2) / np.power(E_k, 2/3), -0.57)
+            return term1 + term2 - pressure
+
+def brents_method(z_b, E_k,pressure, x0, x1, max_iter=50, tolerance=1e-5):
+        """
+        Brent's method for root finding.
+
+        Parameters:
+        - f: The function for which to find the root.
+        - x0: The lower bound of the interval.
+        - x1: The upper bound of the interval.
+        - tolerance: The tolerance for convergence.
+        - max_iter: The maximum number of iterations.
+
+        Returns:
+        - The root of the function within the given interval.
+        """
+        fx0 = p(x0,z_b = z_b, E_k = E_k, pressure = pressure)
+        fx1 = p(x1,z_b = z_b, E_k = E_k, pressure = pressure)
+    
+        if fx0 * fx1 >= 0:
+            raise ValueError("Function values at the interval endpoints must have opposite signs.")
+
+        if abs(fx0) < abs(fx1):
+            x0, x1 = x1, x0
+            fx0, fx1 = fx1, fx0
+    
+        x2, fx2 = x0, fx0
+    
+        mflag = True
+        steps_taken = 0
+    
+        while steps_taken < max_iter and abs(x1-x0) > tolerance:
+            fx0 = p(x0,z_b = z_b, E_k = E_k, pressure = pressure)
+            fx1 = p(x1,z_b = z_b, E_k = E_k, pressure = pressure)
+            fx2 = p(x2,z_b = z_b, E_k = E_k, pressure = pressure)
+    
+            if fx0 != fx2 and fx1 != fx2:
+                L0 = (x0 * fx1 * fx2) / ((fx0 - fx1) * (fx0 - fx2))
+                L1 = (x1 * fx0 * fx2) / ((fx1 - fx0) * (fx1 - fx2))
+                L2 = (x2 * fx1 * fx0) / ((fx2 - fx0) * (fx2 - fx1))
+                new = L0 + L1 + L2
+    
+            else:
+                new = x1 - ( (fx1 * (x1 - x0)) / (fx1 - fx0) )
+    
+            if ((new < ((3 * x0 + x1) / 4) or new > x1) or
+                (mflag == True and (abs(new - x1)) >= (abs(x1 - x2) / 2)) or
+                (mflag == False and (abs(new - x1)) >= (abs(x2 - d) / 2)) or
+                (mflag == True and (abs(x1 - x2)) < tolerance) or
+                (mflag == False and (abs(x2 - d)) < tolerance)):
+                new = (x0 + x1) / 2
+                mflag = True
+    
+            else:
+                mflag = False
+    
+            fnew = p(new,z_b = z_b, E_k = E_k, pressure = pressure)
+            d, x2 = x2, x1
+    
+            if (fx0 * fnew) < 0:
+                x1 = new
+            else:
+                x0 = new
+    
+            if abs(fx0) < abs(fx1):
+                x0, x1 = x1, x0
+            
+            steps_taken += 1
+
+        return x1
+
 def calculate_damage_radius(target_pressures, z_b, E_k):
-    def p(r, z_b, E_k):
-        term1 = 3e11 * np.power((r**2 + z_b**2) / np.power(E_k, 2/3), -1.3)
-        term2 = 2e7 * np.power((r**2 + z_b**2) / np.power(E_k, 2/3), -0.57)
-        return term1 + term2
-
-    def dp(r, z_b, E_k):
-        term1 = -1.3 * 3e11 * np.power((r**2 + z_b**2) / np.power(E_k, 2/3), -2.3) * (2 * r / np.power(E_k, 2/3))
-        term2 = -0.57 * 2e7 * np.power((r**2 + z_b**2) / np.power(E_k, 2/3), -1.57) * (2 * r / np.power(E_k, 2/3))
-        return term1 + term2
-
-    def newtons_method(target_pressure, z_b, E_k, initial_guess= 10000, tolerance=1e-6, max_iterations=100):
-        r = initial_guess
-
-        for iteration in range(max_iterations):
-            pressure_value = p(r, z_b, E_k)
-            pressure_diff = pressure_value - target_pressure
-
-            if abs(pressure_diff) < tolerance:
-                print(f"Converged after {iteration} iterations.")
-                return r
-
-            derivative = dp(r, z_b, E_k)
-
-            if derivative == 0:
-                # Avoid division by zero
-                print("Derivative is zero. Stopping.")
-                break
-
-            r -= pressure_diff / derivative
-
-        raise ValueError("Newton's method did not converge within the maximum number of iterations.")
-
     radii=[]
     for i in target_pressures:
-        radii.append(newtons_method(i,z_b,E_k))
-    flipped_list = radii[::-1]
-    return flipped_list
+        radius = brents_method(z_b, E_k,i, 0, 1e6)
+        radii.append(radius)
+        
+    return radii
 
 
 def impact_risk(planet,
