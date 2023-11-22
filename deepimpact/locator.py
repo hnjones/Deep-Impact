@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import os
 
-__all__ = ['GeospatialLocator', 'great_circle_distance']
+__all__ = ["GeospatialLocator", "great_circle_distance"]
 
 
 def great_circle_distance(latlon1, latlon2):
@@ -54,10 +54,14 @@ def great_circle_distance(latlon1, latlon2):
     cos_d = sin_lat1 * sin_lat2 + cos_lat1 * cos_lat2 * np.cos(delta_lon)
 
     # Clipping to avoid precision issues
-    cos_d = np.clip(cos_d, -1, 1) 
+    cos_d = np.clip(cos_d, -1, 1)
 
     # Compute distance
     distance = R * np.arccos(cos_d)
+
+    # Set distance to zero for identical points
+    identical = np.all(latlon1_rad[:, np.newaxis] == latlon2_rad, axis=2)
+    distance[identical] = 0
 
     return distance
 
@@ -67,13 +71,22 @@ class GeospatialLocator(object):
     Class to interact with a postcode database file and a population grid file.
     """
 
-    def __init__(self, postcode_file = os.sep.join((os.path.dirname(__file__), '..',
-                                             'resources',
-                                             'full_postcodes.csv')),
-                 census_file = os.sep.join((os.path.dirname(__file__), '..',
-                                             'resources',
-                                             'UK_residential_population_2011_latlon.asc')),
-                 norm=great_circle_distance):
+    def __init__(
+        self,
+        postcode_file=os.sep.join(
+            (os.path.dirname(__file__), "..", "resources",
+             "full_postcodes.csv")
+        ),
+        census_file=os.sep.join(
+            (
+                os.path.dirname(__file__),
+                "..",
+                "resources",
+                "UK_residential_population_2011_latlon.asc",
+            )
+        ),
+        norm=great_circle_distance,
+    ):
         """
         Parameters
         ----------
@@ -96,7 +109,7 @@ class GeospatialLocator(object):
         self.census_file = census_file
         self.norm = norm
         self.postcodes = self.load_postcode_data()
-        self.census = self.load_census_data() 
+        self.census = self.load_census_data()
 
     def load_postcode_data(self):
         # Load postcode data from CSV
@@ -104,7 +117,7 @@ class GeospatialLocator(object):
             df = pd.read_csv(self.postcode_file)
             return df
         return pd.DataFrame()
-    
+
     def get_postcodes_by_radius(self, X, radii):
         """
         Return postcodes within specific distances of
@@ -138,16 +151,17 @@ class GeospatialLocator(object):
         result = []
         for radius in radii:
             # Calculating distances to all postcodes
-            distances = self.norm(self.postcodes[['Latitude', 'Longitude']].values, [X])
-            
+            distances = self.norm(self.postcodes[["Latitude",
+                                                  "Longitude"]].values, [X])
+
             # Filter postcodes within the radius
             within_radius = self.postcodes[distances[:, 0] <= radius]
-            result.append(within_radius['Postcode'].tolist())
+            result.append(within_radius["Postcode"].tolist())
 
         return result
-    
+
     def load_census_data(self):
-        with open(self.census_file, 'r') as file:
+        with open(self.census_file, "r") as file:
             # Headers
             ncols = int(file.readline().split()[1])
             nrows = int(file.readline().split()[1])
@@ -160,24 +174,23 @@ class GeospatialLocator(object):
             # Read the data
             data = np.loadtxt(file, dtype=float)
 
-            # Reshaping data into 3 arrays as they are stacked one after the other
+            # Reshape into 3 arrays as they are stacked one after the other
             data = data.reshape((-1, nrows, ncols))
 
             # Updating the population to 0 for missing values
-            data[2][data[2] == -9999] = 0
+            data[2][data[2] == nodata_value] = 0
 
             latitude = data[0].flatten()
             longitude = data[1].flatten()
             population = data[2].flatten()
 
-            df = pd.DataFrame({
-                'Latitude': latitude,
-                'Longitude': longitude,
-                'Population': population
-            })
+            df = pd.DataFrame(
+                {"Latitude": latitude, "Longitude": longitude,
+                 "Population": population}
+            )
 
         return df
-        
+
     def get_population_by_radius(self, X, radii):
         """
         Return the population within specific distances of input location.
@@ -202,14 +215,16 @@ class GeospatialLocator(object):
 
         """
         # Calculate distances from X to each point in the census data
-        self.census['distance'] = self.norm(self.census[
-            ['Latitude', 'Longitude']].values, [X])[:, 0]
+        self.census["distance"] = self.norm(
+            self.census[["Latitude", "Longitude"]].values, [X]
+        )[:, 0]
 
         populations_by_radius = []
         for radius in radii:
             # Sum population for points within the radius
-            total_population = self.census[
-                self.census['distance'] <= radius]['Population'].sum()
-            populations_by_radius.append(total_population)
+            total_population = self.census[self.census["distance"] <= radius][
+                "Population"
+            ].sum()
+            populations_by_radius.append(int(total_population))
 
         return populations_by_radius
