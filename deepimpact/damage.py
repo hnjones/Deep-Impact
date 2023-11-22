@@ -1,12 +1,12 @@
 """Module to calculate the damage and impact risk for given scenarios"""
 from collections import Counter
 import os
+import math
 import pandas as pd
-from locator import GeospatialLocator
 import folium
 import numpy as np
 from folium.plugins import HeatMap
-import math
+from .locator import GeospatialLocator
 __all__ = ['damage_zones', 'impact_risk']
 
 
@@ -51,7 +51,6 @@ def damage_zones(outcome, lat, lon, bearing, pressures):
                                 pressures=[1e3, 3.5e3, 27e3, 43e3])
     """
 
-    
     # Replace this code with your own. For demonstration we just
     # return lat, lon and a radius of 5000 m for each pressure
     burst_altitude = outcome['burst_altitude']
@@ -170,22 +169,26 @@ def impact_risk(planet,
     postcodes_all=[]
     population_all=[]
     for i in range(data.shape[0]):
+        print(f"data{i}strat")
         result = planet.solve_atmospheric_entry(radius=data.loc[i,'radius'],
                                                 angle=data.loc[i,'angle'],
                                                 strength=data.loc[i,'strength'],
-                                                density=data.loc[i,'dentisy'],
+                                                density=data.loc[i,'density'],
                                                 velocity=data.loc[i,'velocity'])
         result = planet.calculate_energy(result)
         outcome = planet.analyse_outcome(result)
+        
         blast_lat, blast_lon, damage_rad=damage_zones(outcome,lat=data.loc[i,'entry latitude'],
                                                       lon=data.loc[i,'entry longitude'],
                                                       bearing=data.loc[i,'bearing'],
                                                       pressures=pressure)
+
         locators = GeospatialLocator()
-        postcodes = locators.get_postcodes_by_radius((blast_lat, blast_lon),radii=damage_rad)[0]
-        population = locators.get_population_by_radius((blast_lat, blast_lon),radii=damage_rad)[0]
-        postcodes_all=postcodes_all + postcodes
-        population_all.append(sum(population))
+        postcodes = locators.get_postcodes_by_radius((blast_lat, blast_lon),radii=damage_rad)
+        population = locators.get_population_by_radius((blast_lat, blast_lon),radii=damage_rad)
+        postcodes_all=postcodes_all + postcodes[-1]
+        population_all.append(population[-1])
+        print(f"data{i}end")
     element_counts = Counter(postcodes_all)
     postcodes_pos = {key: count / data.shape[0] for key, count in element_counts.items()}
 
@@ -213,8 +216,7 @@ def impact_risk_plot(probability, population):
         A html saved in local to show the probability of different postcode 
         impacted by the scenario.
 
-    """
-        
+    """ 
     data_post = pd.read_csv(os.sep.join((os.path.dirname(__file__),
                                          '..', 'resources',
                                          'full_postcodes.csv')))
@@ -227,4 +229,3 @@ def impact_risk_plot(probability, population):
     HeatMap(data_with_weights[['Latitude', 'Longitude','probability']].values.tolist(),
             gradient={0.4: 'blue', 0.65: 'lime', 1: 'red'}, radius=15, blur=10).add_to(m)
     m.save("weighted_heatmap.html")
-
