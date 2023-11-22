@@ -5,7 +5,7 @@ for the Deep Impact project
 import os
 import numpy as np
 import pandas as pd
-
+from scipy.interpolate import interp1d
 
 __all__ = ['Planet']
 
@@ -83,7 +83,7 @@ class Planet():
                 self.rhoa = lambda z: rho0 * np.exp(-z / H)
             elif atmos_func == 'tabular':
                 self.read_csv()
-                self.rhoa = lambda x: self.linear_interpolate(x)
+                self.rhoa = lambda x: self.interpolate_density()
             elif atmos_func == 'constant':
                 self.rhoa = lambda x: rho0
             else:
@@ -192,6 +192,8 @@ class Planet():
 
         return result_df
 
+
+
     def calculate_energy(self, result):
         # Calculate the kinetic energy
         kinetic_energy = 0.5 * result['mass'] * result['velocity']**2
@@ -199,15 +201,16 @@ class Planet():
         # Convert kinetic energy from Joules to kilotons of TNT
         kinetic_energy_kt = kinetic_energy / 4.184e12
 
-        # Calculate the energy difference between successive steps
-        energy_diff = np.diff(kinetic_energy_kt, prepend=np.nan)
+        # Calculate the energy difference between successive steps, prepend the first value to maintain array size
+        energy_diff = np.diff(kinetic_energy_kt, prepend=kinetic_energy_kt[0])
 
         # Calculate the altitude difference between successive steps
-        altitude_diff = np.diff(result['altitude'], prepend=np.nan)
+        altitude_diff = np.diff(result['altitude'], prepend=result['altitude'][0])
 
-        # Avoid division by zero by replacing zeros with NaN
-        altitude_diff[altitude_diff == 0] = np.nan
-            
+        # Replace any zero altitude differences with a small value to avoid division by zero
+        small_value = 1e-6  # This can be adjusted as needed
+        altitude_diff[altitude_diff == 0] = small_value
+
         # Calculate dedz, convert from per meter to per kilometer
         dedz = energy_diff / (altitude_diff / 1000)
 
@@ -268,20 +271,13 @@ class Planet():
         return outcome
     
     def read_csv(self):
-        self.altitudes = []
-        self.densities = []
         with open(self.atmos_filename, 'r') as file:
             next(file)  # Skip the header line
-            for line in file:
-                if line.strip():  # Check if line is not empty
-                    parts = line.split()
-                    self.altitudes.append(float(parts[0]))  # Altitude value
-                    self.densities.append(float(parts[1]))  # Density value
+            data = np.loadtxt(file)
+            self.altitudes = data[:, 0]
+            self.densities = data[:, 1]
+            self.interpolator = interp1d(self.altitudes, self.densities, kind='cubic', fill_value="extrapolate")
 
 
-    def linear_interpolate(self, x):
-        for i in range(len(self.altitudes) - 1):
-            if self.altitudes[i] <= x <= self.altitudes[i + 1]:
-                return self.densities[i] + (self.densities[i + 1] - self.densities[i]) * \
-                       (x - self.altitudes[i]) / (self.altitudes[i + 1] - self.altitudes[i])
-        return None  # Return None or handle extrapolation
+    def interpolate_density(self, x):
+        return self.interpolator(x)
