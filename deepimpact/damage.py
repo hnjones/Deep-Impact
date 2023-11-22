@@ -6,7 +6,8 @@ import pandas as pd
 import folium
 import numpy as np
 from folium.plugins import HeatMap
-from .locator import GeospatialLocator
+#from .locator import GeospatialLocator
+import deepimpact
 __all__ = ['damage_zones', 'impact_risk']
 
 
@@ -178,12 +179,13 @@ def impact_risk(planet,
         result = planet.calculate_energy(result)
         outcome = planet.analyse_outcome(result)
         
+        
         blast_lat, blast_lon, damage_rad=damage_zones(outcome,lat=data.loc[i,'entry latitude'],
                                                       lon=data.loc[i,'entry longitude'],
                                                       bearing=data.loc[i,'bearing'],
-                                                      pressures=pressure)
+                                                      pressures=[pressure])
 
-        locators = GeospatialLocator()
+        locators = deepimpact.GeospatialLocator()
         postcodes = locators.get_postcodes_by_radius((blast_lat, blast_lon),radii=damage_rad)
         population = locators.get_population_by_radius((blast_lat, blast_lon),radii=damage_rad)
         postcodes_all=postcodes_all + postcodes[-1]
