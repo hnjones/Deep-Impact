@@ -6,7 +6,6 @@ import pandas as pd
 import folium
 import numpy as np
 from folium.plugins import HeatMap
-#from .locator import GeospatialLocator
 import deepimpact
 __all__ = ['damage_zones', 'impact_risk']
 
