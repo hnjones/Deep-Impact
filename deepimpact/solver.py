@@ -5,7 +5,7 @@ for the Deep Impact project
 import os
 import numpy as np
 import pandas as pd
-
+from scipy.interpolate import interp1d
 
 __all__ = ['Planet']
 
@@ -83,7 +83,7 @@ class Planet():
                 self.rhoa = lambda z: rho0 * np.exp(-z / H)
             elif atmos_func == 'tabular':
                 self.read_csv()
-                self.rhoa = lambda x: self.linear_interpolate_np(x)
+                self.rhoa = lambda x: self.interpolate_density()
             elif atmos_func == 'constant':
                 self.rhoa = lambda x: rho0
             else:
@@ -276,14 +276,8 @@ class Planet():
             data = np.loadtxt(file)
             self.altitudes = data[:, 0]
             self.densities = data[:, 1]
+            self.interpolator = interp1d(self.altitudes, self.densities, kind='cubic', fill_value="extrapolate")
 
-    def linear_interpolate_np(self, x):
-        # Find indices where to insert x for maintaining order
-        i = np.searchsorted(self.altitudes, x, side='right') - 1
-        if i < 0 or i >= len(self.altitudes) - 1:
-            return None  # x is out of the bounds of the data
-        
-        # Perform the interpolation
-        x0, x1 = self.altitudes[i], self.altitudes[i + 1]
-        y0, y1 = self.densities[i], self.densities[i + 1]
-        return y0 + (y1 - y0) * (x - x0) / (x1 - x0)
+
+    def interpolate_density(self, x):
+        return self.interpolator(x)
