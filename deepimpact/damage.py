@@ -2,7 +2,7 @@
 from collections import Counter
 import os
 import pandas as pd
-from deepimpact import GeospatialLocator
+from locator import GeospatialLocator
 import folium
 import numpy as np
 from folium.plugins import HeatMap
