@@ -294,15 +294,36 @@ class Planet:
         max_dedz = result.loc[max_dedz_idx, 'dedz']
 
         # Check if the max energy deposition occurs at an altitude above 0
-        if result.loc[max_dedz_idx, 'altitude'] > 0:
+        max_dedz_altitude = result.loc[max_dedz_idx, 'altitude']
+        if max_dedz_altitude > 0:
             outcome['outcome'] = 'Airburst'
             outcome['burst_peak_dedz'] = max_dedz
-            outcome['burst_altitude'] = result.loc[max_dedz_idx, 'altitude']
+            outcome['burst_altitude'] = max_dedz_altitude
             outcome['burst_distance'] = result.loc[max_dedz_idx, 'distance']
-            outcome['burst_energy'] = result.loc[max_dedz_idx, 'dedz']
+
+            # Calculate the kinetic energy loss from initial altitude to burst altitude
+            initial_kinetic_energy = 0.5 * result.loc[0, 'mass'] * result.loc[0, 'velocity']**2
+            burst_kinetic_energy = 0.5 * result.loc[max_dedz_idx, 'mass'] * result.loc[max_dedz_idx, 'velocity']**2
+            energy_loss = initial_kinetic_energy - burst_kinetic_energy
+
+            # Calculate burst energy
+            residual_energy_at_burst = initial_kinetic_energy - energy_loss
+            outcome['burst_energy'] = max(energy_loss, residual_energy_at_burst) / 4.184e12
         else:
             outcome['outcome'] = 'Cratering'
             # For cratering, determine the specifics at the point of ground impact
+            impact_index = result[result['altitude'] <= 0].index[0]  # Index of ground impact
+            initial_kinetic_energy = 0.5 * result.loc[0, 'mass'] * result.loc[0, 'velocity']**2
+            residual_kinetic_energy_at_impact = 0.5 * result.loc[impact_index, 'mass'] * result.loc[impact_index, 'velocity']**2
+
+            # Set burst_peak_dedz to the dedz value at impact
+            outcome['burst_peak_dedz'] = result.loc[impact_index, 'dedz']
+            # Set burst_altitude to 0, as the burst happens at ground level
+            outcome['burst_altitude'] = 0
+            # Set burst_distance to the horizontal distance at impact
+            outcome['burst_distance'] = result.loc[impact_index, 'distance']
+            # Calculate burst_energy
+            outcome['burst_energy'] = max(initial_kinetic_energy - residual_kinetic_energy_at_impact, residual_kinetic_energy_at_impact) / 4.184e12
 
         return outcome
 
