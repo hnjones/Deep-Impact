@@ -33,6 +33,7 @@ def test_great_circle_distance():
 
 
 def test_longitude_edge():
+    # checking for edge case for lognitude
     point1 = [0, -179]
     point2 = [0, 179]
     distance = great_circle_distance(point1, point2)

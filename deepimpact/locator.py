@@ -128,8 +128,9 @@ class GeospatialLocator(object):
         # Load postcode data from CSV
         if self.postcode_file:
             df = pd.read_csv(self.postcode_file)
-            # filter invalid latitude values
+            # filter invalid latitude and longitude values
             df = df[df['Latitude'].between(-90, 90)]
+            df = df[df['Longitude'].between(-180, 180)]
             return df
         return pd.DataFrame()
 
@@ -243,8 +244,6 @@ class GeospatialLocator(object):
                     (self.census["Latitude"] == grid_center[0])
                     & (self.census["Longitude"] == grid_center[1])
                 ]["Population"].values[0]
-
-                print(intersection_percentage)
 
                 # Entire population of this grid is impacted
                 impacted_populations += intersection_percentage*grid_population
