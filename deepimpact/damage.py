@@ -78,15 +78,22 @@ def find_destination(lat, lon, bearing, distance):
     phi1 = math.radians(lat)  # Current lat point converted to radians
     lambda1 = math.radians(lon)  # Current long point converted to radians
 
-    sin_phi2 = math.sin(phi1) * math.cos(distance / R) + math.cos(phi1) * math.sin(
-        distance / R
-    ) * math.cos(bearing)
+    # Check for edge cases at the poles
+    if abs(lat) == 90:
+        new_lon = lon + math.degrees(bearing)
+        # Adjust new longitude to be within -180 to 180 degrees
+        new_lon = (new_lon + 180) % 360 - 180
+        return lat, new_lon
+
+    sin_phi2 = math.sin(phi1) * math.cos(distance / R) + math.cos(phi1) * math.sin(distance / R) * math.cos(bearing)
     lat2 = math.asin(sin_phi2)
 
-    tan_lambda = (math.sin(bearing) * math.sin(distance / R) * math.cos(phi1)) / (
-        math.cos(distance / R) - math.sin(phi1) * math.sin(lat2)
-    )
+    tan_lambda = (math.sin(bearing) * math.sin(distance / R) * math.cos(phi1)) / (math.cos(distance / R) - math.sin(phi1) * math.sin(lat2))
     lon2 = math.atan(tan_lambda) + lambda1
+
+    # Adjust lon2 only if it's outside the range of -π to π radians
+    if lon2 < -math.pi or lon2 > math.pi:
+        lon2 = (lon2 + math.pi) % (2 * math.pi) - math.pi
 
     return math.degrees(lat2), math.degrees(lon2)
 
