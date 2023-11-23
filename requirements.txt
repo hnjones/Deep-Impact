@@ -11,4 +11,6 @@ dask
 distributed
 gdown
 folium
+pyqt5
+PyQtWebEngine
 

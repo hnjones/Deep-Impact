@@ -1,4 +1,3 @@
-import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QTableWidgetItem, QCheckBox, QVBoxLayout
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from deepimpack_UI import Ui_MainWindow
