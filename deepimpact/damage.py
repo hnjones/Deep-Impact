@@ -56,7 +56,9 @@ def damage_zones(outcome, lat, lon, bearing, pressures):
     # return lat, lon and a radius of 5000 m for each pressure
     burst_altitude = outcome["burst_altitude"]
     burst_energy = outcome["burst_energy"]
-    burst_distance = outcome.get("burst_distance", 0)  # default to 0 if not found
+
+    # default to 0 if not found
+    burst_distance = outcome.get("burst_distance", 0)
 
     # Calculate the surface zero point
     blat, blon = find_destination(lat, lon, bearing, burst_distance)
@@ -69,7 +71,8 @@ def damage_zones(outcome, lat, lon, bearing, pressures):
 
 def find_destination(lat, lon, bearing, distance):
     """
-    Calculate the latitude and longitude of the surface zero location point, given an entry
+    Calculate the latitude and longitude of the surface zero location point,
+    given an entry
     latitude and longitude, a bearing, and a burst distance.
 
     Parameters
@@ -122,12 +125,13 @@ def find_destination(lat, lon, bearing, distance):
         new_lon = (new_lon + 180) % 360 - 180
         return lat, new_lon
 
-    sin_phi2 = math.sin(phi1) * math.cos(distance / R) + math.cos(phi1) * math.sin(
-        distance / R
-    ) * math.cos(bearing)
+    sin_phi2 = math.sin(phi1) * math.cos(distance / R) + math.cos(
+        phi1) * math.sin(distance / R) * math.cos(bearing)
+
     lat2 = math.asin(sin_phi2)
 
-    tan_lambda = (math.sin(bearing) * math.sin(distance / R) * math.cos(phi1)) / (
+    tan_lambda = (math.sin(bearing) * math.sin(distance / R) * math.cos(phi1)
+                  ) / (
         math.cos(distance / R) - math.sin(phi1) * math.sin(lat2)
     )
     lon2 = math.atan(tan_lambda) + lambda1
@@ -141,7 +145,8 @@ def find_destination(lat, lon, bearing, distance):
 
 def airblast_func(r, z_b, E_k, pressure):
     """
-    The airblast function used to calculate the damage radius for a target pressure.
+    The airblast function used to calculate the damage radius for a target
+    pressure.
 
     Parameters:
     - r: The radius at which to calculate the airblast function.
@@ -187,7 +192,7 @@ def brents_method(z_b, E_k, pressure, x0, x1, max_iter=100, tolerance=1e-5):
 
     mflag = True
     steps_taken = 0
-
+    d = 0
     while steps_taken < max_iter and abs(x1 - x0) > tolerance:
         fx0 = airblast_func(x0, z_b=z_b, E_k=E_k, pressure=pressure)
         fx1 = airblast_func(x1, z_b=z_b, E_k=E_k, pressure=pressure)
@@ -204,10 +209,10 @@ def brents_method(z_b, E_k, pressure, x0, x1, max_iter=100, tolerance=1e-5):
 
         if (
             (new < ((3 * x0 + x1) / 4) or new > x1)
-            or (mflag == True and (abs(new - x1)) >= (abs(x1 - x2) / 2))
-            or (mflag == False and (abs(new - x1)) >= (abs(x2 - d) / 2))
-            or (mflag == True and (abs(x1 - x2)) < tolerance)
-            or (mflag == False and (abs(x2 - d)) < tolerance)
+            or (mflag is True and (abs(new - x1)) >= (abs(x1 - x2) / 2))
+            or (mflag is False and (abs(new - x1)) >= (abs(x2 - d) / 2))
+            or (mflag is True and (abs(x1 - x2)) < tolerance)
+            or (mflag is False and (abs(x2 - d)) < tolerance)
         ):
             new = (x0 + x1) / 2
             mflag = True
@@ -233,7 +238,8 @@ def brents_method(z_b, E_k, pressure, x0, x1, max_iter=100, tolerance=1e-5):
 
 def calculate_damage_radius(target_pressures, z_b, E_k):
     """
-    Calculate the damage radius for a given set of target pressures, depth of burst, and kinetic energy.
+    Calculate the damage radius for a given set of target pressures, depth
+    of burst, and kinetic energy.
 
     Parameters:
     target_pressures (list): List of target pressures in pascals.
@@ -257,7 +263,8 @@ def calculate_damage_radius(target_pressures, z_b, E_k):
 def impact_risk(
     planet,
     impact_file=os.sep.join(
-        (os.path.dirname(__file__), "..", "resources", "impact_parameter_list.csv")
+        (os.path.dirname(__file__), "..", "resources",
+         "impact_parameter_list.csv")
     ),
     pressure=30.0e3,
     nsamples=None,
@@ -294,17 +301,18 @@ def impact_risk(
         population affected by the impact, with keys 'mean' and 'stdev'.
         Values are floats.
     """
-    #check input
+    # check input
     if not isinstance(pressure, (int, float, complex)):
         return (False, False)
 
-    #read senario
+    # read senario
     data = pd.read_csv(impact_file)
     data = data.iloc[:nsamples]
     postcodes_all = []
     population_all = []
 
-    #run model to get the postcode and popoluartion in different pressure level
+    # run model to get the postcode and popoluartion in different
+    # pressure level
     for i in range(data.shape[0]):
         result = planet.solve_atmospheric_entry(
             radius=data.loc[i, "radius"],
@@ -332,19 +340,20 @@ def impact_risk(
             (blast_lat, blast_lon), radii=damage_rad
         )
 
-        #check did the the highest pressure reach 30kp
+        # check did the the highest pressure reach 30kp
         if len(postcodes) != 0:
             postcodes_all = postcodes_all + postcodes[-1]
             population_all.append(population[-1])
-    
-    #calculate the possibility  
+
+    # calculate the possibility
     element_counts = Counter(postcodes_all)
     postcodes_code = list(element_counts.keys())
     postcodes_prob = list(element_counts.values())
     postcodes_prob = [i / data.shape[0] for i in postcodes_prob]
 
     return (
-        pd.DataFrame({"Postcode": postcodes_code, "probability": postcodes_prob}),
+        pd.DataFrame({"Postcode": postcodes_code,
+                     "probability": postcodes_prob}),
         {
             "mean": float(np.mean(population_all)),
             "stdev": float(np.std(population_all)),
@@ -375,14 +384,15 @@ def impact_risk_plot(probability):
 
     """
 
-    #read the full postcode location
+    # read the full postcode location
     data_post = pd.read_csv(
         os.sep.join(
-            (os.path.dirname(__file__), "..", "resources", "full_postcodes.csv")
+            (os.path.dirname(__file__), "..", "resources",
+             "full_postcodes.csv")
         )
     )
 
-    #merge the data_post and the posibility
+    # merge the data_post and the posibility
     data_with_weights = pd.merge(
         probability,
         data_post[["Postcode", "Latitude", "Longitude"]],
@@ -390,13 +400,15 @@ def impact_risk_plot(probability):
         how="left",
     )
 
-    #plot map
+    # plot map
     m = folium.Map(
-        location=[data_with_weights.Latitude[0], data_with_weights.Longitude[0]],
+        location=[data_with_weights.Latitude[0],
+                  data_with_weights.Longitude[0]],
         zoom_start=13,
     )
     HeatMap(
-        data_with_weights[["Latitude", "Longitude", "probability"]].values.tolist(),
+        data_with_weights[["Latitude", "Longitude",
+                          "probability"]].values.tolist(),
         gradient={0.4: "blue", 0.65: "lime", 1: "red"},
         radius=15,
         blur=10,
