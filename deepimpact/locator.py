@@ -156,6 +156,11 @@ class GeospatialLocator(object):
 
         result = []
         for radius in radii:
+            if radius <= 0:
+                # Return an empty list for non-positive radius values
+                result.append([])
+                continue
+
             # Calculating distances to all postcodes
             distances = self.norm(self.postcodes[["Latitude",
                                                   "Longitude"]].values, [X])
@@ -221,6 +226,21 @@ class GeospatialLocator(object):
             # Initialize the intersection percentage
             intersection_percentage = 0
 
+            # Check if the entire circle is within a grid cell
+            if distance + radius < half_diagonal:
+                intersection_percentage = (np.pi*radius**2)/(1000*1000)
+                # Retrieve the population for this grid center
+                grid_population = self.census[
+                    (self.census["Latitude"] == grid_center[0])
+                    & (self.census["Longitude"] == grid_center[1])
+                ]["Population"].values[0]
+
+                print(intersection_percentage)
+
+                # Entire population of this grid is impacted
+                impacted_populations += intersection_percentage*grid_population
+                break  # No need to check other neighbors
+
             # Check if the grid intersects with the circle
             if distance <= radius + half_diagonal:
                 if distance <= radius - half_diagonal:
@@ -281,17 +301,26 @@ class GeospatialLocator(object):
                 continue
 
             # Sum population for points within the radius
-            total_population = self.census[self.census["distance"] <= radius][
-                "Population"
-            ].sum()
 
-            if total_population == 0:
+            if radius <= 500:
                 # Find the 4 nearest coordinates
                 nearest_coords, distance = self.find_nearest_coordinates(X, 4)
 
                 total_population = self.calculate_impacted_population(
                     radius, nearest_coords, distance
                 )
+
+            elif radius > 500 and radius <= 1000:
+                # Find the 4 nearest coordinates
+                nearest_coords, distance = self.find_nearest_coordinates(X, 10)
+
+                total_population = self.calculate_impacted_population(
+                    radius, nearest_coords, distance
+                )
+
+            else:
+                total_population = self.census[self.census["distance"] <=
+                                               radius]["Population"].sum()
 
             populations_by_radius.append(int(total_population))
 
