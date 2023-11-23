@@ -230,89 +230,89 @@ class Planet:
 
         return result_df
 
-    # def calculate_energy(self, result):
-    #     # Calculate the kinetic energy
-    #     kinetic_energy = 0.5 * result['mass'] * result['velocity']**2
+    def calculate_energy(self, result):
+        # Calculate the kinetic energy
+        kinetic_energy = 0.5 * result['mass'] * result['velocity']**2
 
-    #     # Convert kinetic energy from Joules to kilotons of TNT
-    #     kinetic_energy_kt = kinetic_energy / 4.184e12
+        # Convert kinetic energy from Joules to kilotons of TNT
+        kinetic_energy_kt = kinetic_energy / 4.184e12
 
-    #     # Calculate the energy difference between successive steps, prepend the first value to maintain array size
-    #     energy_diff = np.diff(kinetic_energy_kt, prepend=kinetic_energy_kt[0])
+        # Calculate the energy difference between successive steps, prepend the first value to maintain array size
+        energy_diff = np.diff(kinetic_energy_kt, prepend=kinetic_energy_kt[0])
 
-    #     # Calculate the altitude difference between successive steps
-    #     altitude_diff = np.diff(result['altitude'], prepend=result['altitude'][0])
+        # Calculate the altitude difference between successive steps
+        altitude_diff = np.diff(result['altitude'], prepend=result['altitude'][0])
 
-    #     # Replace any zero altitude differences with a small value to avoid division by zero
-    #     small_value = 1e-6  # This can be adjusted as needed
-    #     altitude_diff[altitude_diff == 0] = small_value
+        # Replace any zero altitude differences with a small value to avoid division by zero
+        small_value = 1e-6  # This can be adjusted as needed
+        altitude_diff[altitude_diff == 0] = small_value
 
-    #     # Calculate dedz, convert from per meter to per kilometer
-    #     dedz = energy_diff / (altitude_diff / 1000)
+        # Calculate dedz, convert from per meter to per kilometer
+        dedz = energy_diff / (altitude_diff / 1000)
 
-    #     # Update or create the 'dedz' column
-    #     if 'dedz' in result.columns:
-    #         result['dedz'] = dedz
-    #     else:
-    #         result.insert(len(result.columns), 'dedz', dedz)
+        # Update or create the 'dedz' column
+        if 'dedz' in result.columns:
+            result['dedz'] = dedz
+        else:
+            result.insert(len(result.columns), 'dedz', dedz)
 
-    #     return result
+        return result
 
-    # def analyse_outcome(self, result):
-    #     """
-    #     Inspect a pre-found solution to calculate the impact and airburst stats
+    def analyse_outcome(self, result):
+        """
+        Inspect a pre-found solution to calculate the impact and airburst stats
 
-    #     Parameters
-    #     ----------
-    #     result : DataFrame
-    #         pandas dataframe with velocity, mass, angle, altitude, horizontal
-    #         distance, radius and dedz as a function of time
+        Parameters
+        ----------
+        result : DataFrame
+            pandas dataframe with velocity, mass, angle, altitude, horizontal
+            distance, radius and dedz as a function of time
 
-    #     Returns
-    #     -------
-    #     outcome : Dict
-    #         dictionary with details of the impact event, which should contain
-    #         the key:
-    #             ``outcome`` (which should contain one of the
-    #             following strings: ``Airburst`` or ``Cratering``),
-    #         as well as the following 4 keys:
-    #             ``burst_peak_dedz``, ``burst_altitude``,
-    #             ``burst_distance``, ``burst_energy``
-    #     """
+        Returns
+        -------
+        outcome : Dict
+            dictionary with details of the impact event, which should contain
+            the key:
+                ``outcome`` (which should contain one of the
+                following strings: ``Airburst`` or ``Cratering``),
+            as well as the following 4 keys:
+                ``burst_peak_dedz``, ``burst_altitude``,
+                ``burst_distance``, ``burst_energy``
+        """
 
-    #     outcome = {'outcome': 'Unknown',
-    #                'burst_peak_dedz': 0.,
-    #                'burst_altitude': 0.,
-    #                'burst_distance': 0.,
-    #                'burst_energy': 0.}
-    #     # Check if the DataFrame is empty
-    #     if result.empty:
-    #         return outcome
+        outcome = {'outcome': 'Unknown',
+                   'burst_peak_dedz': 0.,
+                   'burst_altitude': 0.,
+                   'burst_distance': 0.,
+                   'burst_energy': 0.}
+        # Check if the DataFrame is empty
+        if result.empty:
+            return outcome
 
-    #     # Find the index of the maximum energy deposition rate
-    #     max_dedz_idx = result['dedz'].idxmax()
-    #     max_dedz = result.loc[max_dedz_idx, 'dedz']
+        # Find the index of the maximum energy deposition rate
+        max_dedz_idx = result['dedz'].idxmax()
+        max_dedz = result.loc[max_dedz_idx, 'dedz']
 
-    #     # Check if the max energy deposition occurs at an altitude above 0
-    #     if result.loc[max_dedz_idx, 'altitude'] > 0:
-    #         outcome['outcome'] = 'Airburst'
-    #         outcome['burst_peak_dedz'] = max_dedz
-    #         outcome['burst_altitude'] = result.loc[max_dedz_idx, 'altitude']
-    #         outcome['burst_distance'] = result.loc[max_dedz_idx, 'distance']
-    #         outcome['burst_energy'] = result.loc[max_dedz_idx, 'dedz']
-    #     else:
-    #         outcome['outcome'] = 'Cratering'
-    #         # For cratering, determine the specifics at the point of ground impact
+        # Check if the max energy deposition occurs at an altitude above 0
+        if result.loc[max_dedz_idx, 'altitude'] > 0:
+            outcome['outcome'] = 'Airburst'
+            outcome['burst_peak_dedz'] = max_dedz
+            outcome['burst_altitude'] = result.loc[max_dedz_idx, 'altitude']
+            outcome['burst_distance'] = result.loc[max_dedz_idx, 'distance']
+            outcome['burst_energy'] = result.loc[max_dedz_idx, 'dedz']
+        else:
+            outcome['outcome'] = 'Cratering'
+            # For cratering, determine the specifics at the point of ground impact
 
-    #     return outcome
+        return outcome
 
-    # def read_csv(self):
-    #     with open(self.atmos_filename, 'r') as file:
-    #         next(file)  # Skip the header line
-    #         data = np.loadtxt(file)
-    #         self.altitudes = data[:, 0]
-    #         self.densities = data[:, 1]
-    #         self.interpolator = interp1d(self.altitudes, self.densities, kind='cubic', fill_value="extrapolate")
+    def read_csv(self):
+        with open(self.atmos_filename, 'r') as file:
+            next(file)  # Skip the header line
+            data = np.loadtxt(file)
+            self.altitudes = data[:, 0]
+            self.densities = data[:, 1]
+            self.interpolator = interp1d(self.altitudes, self.densities, kind='cubic', fill_value="extrapolate")
 
-    # def interpolate_density(self, x):
-    #     return self.interpolator(x)
+    def interpolate_density(self, x):
+        return self.interpolator(x)
