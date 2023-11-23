@@ -45,10 +45,9 @@ def great_circle_distance(latlon1, latlon2):
     # Validate latitude and longitude values
     for latlon in [latlon1, latlon2]:
         if np.any(latlon[:, 0] < -90) or np.any(latlon[:, 0] > 90):
-            raise ValueError("Latitude values must be in the range -90 to 90 degrees.")
+            raise ValueError("Latitude must be in the range -90 to 90")
         if np.any(latlon[:, 1] < -180) or np.any(latlon[:, 1] > 180):
-            raise ValueError("Longitude values must be in the range -180 to 180 degrees.")
-
+            raise ValueError("Longitude must be in the range -180 to 180")
 
     # Converting latitudes and longitudes from degrees to radians
     latlon1_rad = np.radians(latlon1)

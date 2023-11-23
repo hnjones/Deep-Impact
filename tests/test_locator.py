@@ -2,6 +2,7 @@ import numpy as np
 from deepimpact import great_circle_distance, GeospatialLocator
 import pytest
 
+
 def test_great_circle_distance_base():
     # Test with two different points
     distance = great_circle_distance([[54.0, 0.0]], [[55, 1.0]])
@@ -37,6 +38,7 @@ def test_longitude_edge():
     distance = great_circle_distance(point1, point2)
     assert np.isclose(distance, great_circle_distance([0, -1], [0, 1]))
 
+
 def test_invalid_latitude():
     # Test with latitude out of range
     latlon1 = [[-91, 0]]
@@ -48,6 +50,7 @@ def test_invalid_latitude():
     with pytest.raises(ValueError):
         great_circle_distance(latlon1, latlon2)
 
+
 def test_invalid_longitude():
     # Test with longitude out of range
     latlon1 = [[0, -181]]
@@ -58,6 +61,7 @@ def test_invalid_longitude():
     latlon1 = [[0, 181]]
     with pytest.raises(ValueError):
         great_circle_distance(latlon1, latlon2)
+
 
 def test_invalid_lat_and_lon():
     # Test with both latitude and longitude out of range
@@ -87,8 +91,8 @@ def test_find_nearest_coordinates():
 def test_get_population_by_radius():
     # test for the edge cases for population function
     locator = GeospatialLocator()
-    populations = locator.get_population_by_radius((51.4981, -0.1773),
-                                                   [10, 500, 1000])
+    populations = locator.get_population_by_radius((51.4981,
+                                                    -0.1773), [10, 500, 1000])
     assert len(populations) == 3
     assert all(isinstance(p, int) for p in populations)
     assert all(p >= 0 for p in populations)
