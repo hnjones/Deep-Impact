@@ -333,7 +333,7 @@ class Planet:
             data = np.loadtxt(file)
             self.altitudes = data[:, 0]
             self.densities = data[:, 1]
-            self.interpolator = interp1d(self.altitudes, self.densities, kind='cubic', fill_value="extrapolate")
+            self.interpolator = interp1d(self.altitudes, self.densities, kind='cubic', bounds_error=False, fill_value="extrapolate")
 
     def interpolate_density(self, x):
         return self.interpolator(x)
