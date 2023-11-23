@@ -253,13 +253,18 @@ def impact_risk(
         population affected by the impact, with keys 'mean' and 'stdev'.
         Values are floats.
     """
+    #check input
+    if not isinstance(pressure, (int, float, complex)):
+        return (False, False)
 
+    #read senario
     data = pd.read_csv(impact_file)
     data = data.iloc[:nsamples]
     postcodes_all = []
     population_all = []
+
+    #run model to get the postcode and popoluartion in different pressure level
     for i in range(data.shape[0]):
-        print(f"data{i}strat")
         result = planet.solve_atmospheric_entry(
             radius=data.loc[i, "radius"],
             angle=data.loc[i, "angle"],
@@ -285,10 +290,13 @@ def impact_risk(
         population = locators.get_population_by_radius(
             (blast_lat, blast_lon), radii=damage_rad
         )
+
+        #check did the the highest pressure reach 30kp
         if len(postcodes) != 0:
             postcodes_all=postcodes_all + postcodes[-1]
             population_all.append(population[-1])
-        print(f"data{i}end")
+    
+    #calculate the possibility  
     element_counts = Counter(postcodes_all)
     postcodes_code = list(element_counts.keys())
     postcodes_prob = list(element_counts.values())
@@ -322,17 +330,23 @@ def impact_risk_plot(probability):
         impacted by the scenario.
 
     """
+
+    #read the full postcode location
     data_post = pd.read_csv(
         os.sep.join(
             (os.path.dirname(__file__), "..", "resources", "full_postcodes.csv")
         )
     )
+
+    #merge the data_post and the posibility
     data_with_weights = pd.merge(
         probability,
         data_post[["Postcode", "Latitude", "Longitude"]],
         on="Postcode",
         how="left",
     )
+
+    #plot map
     m = folium.Map(
         location=[data_with_weights.Latitude[0], data_with_weights.Longitude[0]],
         zoom_start=13,
