@@ -64,7 +64,7 @@ def test_longlist_pressure(deepimpact):
     assert type(blat) is float
     assert type(blon) is float
     assert type(damrad) is list
-    assert len(damrad) == 5
+    assert len(damrad) == 7
 
 
 def test_empty_list(deepimpact):
@@ -82,7 +82,7 @@ def test_empty_list(deepimpact):
     assert type(blat) is float
     assert type(blon) is float
     assert type(damrad) is list
-    assert len(damrad) == 5
+    assert len(damrad) == 0
 
 
 # Test is the pressure is extremely large
@@ -120,6 +120,11 @@ def test_great_circle_distance(deepimpact):
     dist = deepimpact.great_circle_distance(pnts1, pnts2)
 
     assert np.allclose(data, dist, rtol=1.0e-4)
+
+# Fixture for common outcome dictionary
+@fixture
+def example_outcome(scope='module'):
+    return {'burst_altitude': 8e3, 'burst_energy': 7e3, 'burst_distance': 90e3, 'burst_peak_dedz': 1e3, 'outcome': 'Airburst'}
 
 
 # Zero Location test
