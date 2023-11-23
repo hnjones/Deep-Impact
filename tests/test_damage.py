@@ -1,9 +1,8 @@
-from collections import OrderedDict
 import pandas as pd
 import numpy as np
 import os
 
-from pytest import fixture, mark
+from pytest import fixture
 
 
 # Use pytest fixtures to generate objects we know we'll reuse.
@@ -96,7 +95,8 @@ def test_extreme_pressure(deepimpact):
         "outcome": "Airburst",
     }
 
-    blat, blon, damrad = deepimpact.damage_zones(outcome, 55.0, 0.0, 135.0, [80e4])
+    blat, blon, damrad = deepimpact.damage_zones(outcome, 55.0, 0.0,
+                                                 135.0, [80e4])
 
     assert type(blat) is float
     assert type(blon) is float
@@ -124,14 +124,9 @@ def test_great_circle_distance(deepimpact):
 
 # Fixture for common outcome dictionary
 @fixture
-def example_outcome(scope="module"):
-    return {
-        "burst_altitude": 8e3,
-        "burst_energy": 7e3,
-        "burst_distance": 90e3,
-        "burst_peak_dedz": 1e3,
-        "outcome": "Airburst",
-    }
+def example_outcome(scope='module'):
+    return {'burst_altitude': 8e3, 'burst_energy': 7e3, 'burst_distance': 90e3,
+            'burst_peak_dedz': 1e3, 'outcome': 'Airburst'}
 
 
 # Zero Location test
@@ -153,7 +148,8 @@ def test_zero_burst_distance(deepimpact, example_outcome):
         "burst_energy": 6000.0,
         "outcome": "Airburst",
     }
-    blat, blon, _ = deepimpact.damage_zones(outcome, 52.79, -2.95, 135, pressures=[1e3])
+    blat, blon, _ = deepimpact.damage_zones(outcome, 52.79, -2.95,
+                                            135, pressures=[1e3])
     assert blat == 52.79 and blon == -2.95
 
     example_outcome["burst_distance"] = 0
@@ -214,7 +210,8 @@ def test_impact_risk(deepimpact, planet):
 
     # common test
     risk_file = os.sep.join(
-        (os.path.dirname(__file__), "..", "resources", "impact_parameter_list.csv")
+        (os.path.dirname(__file__), "..", "resources",
+         "impact_parameter_list.csv")
     )
     assert os.path.isfile(risk_file)
 
@@ -230,6 +227,7 @@ def test_impact_risk(deepimpact, planet):
 
     # special case: nsampel = None
     probability, population = deepimpact.impact_risk(planet)
-    assert all([element <= 1 for element in probability["probability"]]) and all(
-        [element >= 0 for element in probability["probability"]]
+    assert all(
+        [element <= 1 for element in probability["probability"]]) and all(
+            [element >= 0 for element in probability["probability"]]
     )
