@@ -21,7 +21,8 @@ class Planet:
         self,
         atmos_func="exponential",
         atmos_filename=os.sep.join(
-            (os.path.dirname(__file__), "..", "resources", "AltitudeDensityTable.csv")
+            (os.path.dirname(__file__), "..",
+             "resources", "AltitudeDensityTable.csv")
         ),
         Cd=1.0,
         Ch=0.1,
@@ -146,7 +147,8 @@ class Planet:
             rho_a = self.rhoa(z)
             A = np.pi * r**2
 
-            dvdt = (-self.Cd * rho_a * A * v**2) / (2 * m) + self.g * np.sin(theta)
+            dvdt = (-self.Cd * rho_a * A * v**2
+                    ) / (2 * m) + self.g * np.sin(theta)
             dmdt = (-self.Ch * rho_a * A * v**3) / (2 * self.Q)
             dthetadt = (
                 (self.g * np.cos(theta)) / v
@@ -176,7 +178,7 @@ class Planet:
         t = 0
         results = []
         fragmented = False
-        user_time_elapsed = 0.0  # Initialize the user-specified time elapsed counter
+        user_time_elapsed = 0.0
         results.append([t] + list(y0))
 
         while True:
@@ -204,7 +206,7 @@ class Planet:
                 if len(results) > 0 and abs(y0[3] - results[-1][4]) < 1:
                     break
                 results.append([t] + list(y0))
-                user_time_elapsed = 0.0  # Reset the user-specified time elapsed counter
+                user_time_elapsed = 0.0
 
             ram_pressure = self.rhoa(y0[3]) * y0[0] ** 2
             if ram_pressure > strength:
@@ -237,13 +239,13 @@ class Planet:
         # Convert kinetic energy from Joules to kilotons of TNT
         kinetic_energy_kt = kinetic_energy / 4.184e12
 
-        # Calculate the energy difference between successive steps, prepend the first value to maintain array size
+        # Calculate the energy difference between successive steps
         energy_diff = np.diff(kinetic_energy_kt, prepend=kinetic_energy_kt[0])
 
         # Calculate the altitude difference between successive steps
-        altitude_diff = np.diff(result['altitude'], prepend=result['altitude'][0])
+        altitude_diff = np.diff(result['altitude'],
+                                prepend=result['altitude'][0])
 
-        # Replace any zero altitude differences with a small value to avoid division by zero
         small_value = 1e-6  # This can be adjusted as needed
         altitude_diff[altitude_diff == 0] = small_value
 
@@ -301,20 +303,27 @@ class Planet:
             outcome['burst_altitude'] = max_dedz_altitude
             outcome['burst_distance'] = result.loc[max_dedz_idx, 'distance']
 
-            # Calculate the kinetic energy loss from initial altitude to burst altitude
-            initial_kinetic_energy = 0.5 * result.loc[0, 'mass'] * result.loc[0, 'velocity']**2
-            burst_kinetic_energy = 0.5 * result.loc[max_dedz_idx, 'mass'] * result.loc[max_dedz_idx, 'velocity']**2
+            # Calculate the kE loss from initial altitude to burst altitude
+            initial_kinetic_energy = (
+                0.5 * result.loc[0, 'mass'] * result.loc[0, 'velocity']**2)
+            burst_kinetic_energy = (
+                0.5 * result.loc[max_dedz_idx, 'mass'] * (
+                    result.loc[max_dedz_idx, 'velocity']**2))
             energy_loss = initial_kinetic_energy - burst_kinetic_energy
 
             # Calculate burst energy
             residual_energy_at_burst = initial_kinetic_energy - energy_loss
-            outcome['burst_energy'] = max(energy_loss, residual_energy_at_burst) / 4.184e12
+            outcome['burst_energy'] = max(energy_loss,
+                                          residual_energy_at_burst) / 4.184e12
         else:
             outcome['outcome'] = 'Cratering'
-            # For cratering, determine the specifics at the point of ground impact
-            impact_index = result[result['altitude'] <= 0].index[0]  # Index of ground impact
-            initial_kinetic_energy = 0.5 * result.loc[0, 'mass'] * result.loc[0, 'velocity']**2
-            residual_kinetic_energy_at_impact = 0.5 * result.loc[impact_index, 'mass'] * result.loc[impact_index, 'velocity']**2
+            # For cratering, determine the specifics at point of ground impact
+            impact_index = result[result['altitude'] <= 0].index[0]
+            initial_kinetic_energy = (
+                0.5 * result.loc[0, 'mass'] * result.loc[0, 'velocity']**2)
+            residual_kinetic_energy_at_impact = (
+                0.5 * result.loc[impact_index, 'mass'] * (
+                    result.loc[impact_index, 'velocity']**2))
 
             # Set burst_peak_dedz to the dedz value at impact
             outcome['burst_peak_dedz'] = result.loc[impact_index, 'dedz']
@@ -323,7 +332,9 @@ class Planet:
             # Set burst_distance to the horizontal distance at impact
             outcome['burst_distance'] = result.loc[impact_index, 'distance']
             # Calculate burst_energy
-            outcome['burst_energy'] = max(initial_kinetic_energy - residual_kinetic_energy_at_impact, residual_kinetic_energy_at_impact) / 4.184e12
+            outcome['burst_energy'] = max(
+                (initial_kinetic_energy - residual_kinetic_energy_at_impact),
+                residual_kinetic_energy_at_impact) / 4.184e12
 
         return outcome
 
@@ -333,7 +344,9 @@ class Planet:
             data = np.loadtxt(file)
             self.altitudes = data[:, 0]
             self.densities = data[:, 1]
-            self.interpolator = interp1d(self.altitudes, self.densities, kind='cubic', bounds_error=False, fill_value="extrapolate")
+            self.interpolator = interp1d(self.altitudes, self.densities,
+                                         kind='cubic', bounds_error=False,
+                                         fill_value="extrapolate")
 
     def interpolate_density(self, x):
         return self.interpolator(x)
