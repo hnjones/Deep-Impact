@@ -265,7 +265,6 @@ def impact_risk(
 
     #run model to get the postcode and popoluartion in different pressure level
     for i in range(data.shape[0]):
-        print(f"data{i}strat")
         result = planet.solve_atmospheric_entry(
             radius=data.loc[i, "radius"],
             angle=data.loc[i, "angle"],
@@ -296,7 +295,6 @@ def impact_risk(
         if len(postcodes) != 0:
             postcodes_all=postcodes_all + postcodes[-1]
             population_all.append(population[-1])
-        print(f"data{i}end")
     
     #calculate the possibility  
     element_counts = Counter(postcodes_all)
