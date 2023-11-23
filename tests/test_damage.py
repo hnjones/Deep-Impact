@@ -199,3 +199,25 @@ def test_impact_risk(deepimpact, planet):
     assert "stdev" in population.keys()
     assert type(population["mean"]) is float
     assert type(population["stdev"]) is float
+
+    # common test
+    risk_file = os.sep.join(
+        (os.path.dirname(__file__), "..", "resources", "impact_parameter_list.csv")
+    )
+    assert os.path.isfile(risk_file)
+
+    # sepcial case: pressure
+    probability, population = deepimpact.impact_risk(
+        planet, pressure=[1e3, 4e3, 30e3, 50e3]
+    )
+    assert not probability
+
+    # special case: nsampel = 1
+    probability, population = deepimpact.impact_risk(planet, nsamples=1)
+    assert all([element == 1 for element in probability["probability"]])
+
+    # special case: nsampel = None
+    probability, population = deepimpact.impact_risk(planet)
+    assert all([element <= 1 for element in probability["probability"]]) and all(
+        [element >= 0 for element in probability["probability"]]
+    )
