@@ -42,6 +42,14 @@ def great_circle_distance(latlon1, latlon2):
     latlon1 = np.atleast_2d(latlon1)
     latlon2 = np.atleast_2d(latlon2)
 
+    # Validate latitude and longitude values
+    for latlon in [latlon1, latlon2]:
+        if np.any(latlon[:, 0] < -90) or np.any(latlon[:, 0] > 90):
+            raise ValueError("Latitude values must be in the range -90 to 90 degrees.")
+        if np.any(latlon[:, 1] < -180) or np.any(latlon[:, 1] > 180):
+            raise ValueError("Longitude values must be in the range -180 to 180 degrees.")
+
+
     # Converting latitudes and longitudes from degrees to radians
     latlon1_rad = np.radians(latlon1)
     latlon2_rad = np.radians(latlon2)
@@ -121,6 +129,8 @@ class GeospatialLocator(object):
         # Load postcode data from CSV
         if self.postcode_file:
             df = pd.read_csv(self.postcode_file)
+            # filter invalid latitude values
+            df = df[df['Latitude'].between(-90, 90)]
             return df
         return pd.DataFrame()
 

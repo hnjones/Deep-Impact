@@ -1,6 +1,6 @@
 import numpy as np
 from deepimpact import great_circle_distance, GeospatialLocator
-
+import pytest
 
 def test_great_circle_distance_base():
     # Test with two different points
@@ -29,6 +29,42 @@ def test_great_circle_distance():
     dist = great_circle_distance(pnts1, pnts2)
 
     assert np.allclose(data, dist, rtol=1.0e-4)
+
+
+def test_longitude_edge():
+    point1 = [0, -179]
+    point2 = [0, 179]
+    distance = great_circle_distance(point1, point2)
+    assert np.isclose(distance, great_circle_distance([0, -1], [0, 1]))
+
+def test_invalid_latitude():
+    # Test with latitude out of range
+    latlon1 = [[-91, 0]]
+    latlon2 = [[10, 10]]
+    with pytest.raises(ValueError):
+        great_circle_distance(latlon1, latlon2)
+
+    latlon1 = [[91, 0]]
+    with pytest.raises(ValueError):
+        great_circle_distance(latlon1, latlon2)
+
+def test_invalid_longitude():
+    # Test with longitude out of range
+    latlon1 = [[0, -181]]
+    latlon2 = [[0, 0]]
+    with pytest.raises(ValueError):
+        great_circle_distance(latlon1, latlon2)
+
+    latlon1 = [[0, 181]]
+    with pytest.raises(ValueError):
+        great_circle_distance(latlon1, latlon2)
+
+def test_invalid_lat_and_lon():
+    # Test with both latitude and longitude out of range
+    latlon1 = [[-91, -181]]
+    latlon2 = [[91, 181]]
+    with pytest.raises(ValueError):
+        great_circle_distance(latlon1, latlon2)
 
 
 def test_get_postcodes_by_radius():
