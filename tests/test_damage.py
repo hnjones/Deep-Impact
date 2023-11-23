@@ -121,10 +121,17 @@ def test_great_circle_distance(deepimpact):
 
     assert np.allclose(data, dist, rtol=1.0e-4)
 
+
 # Fixture for common outcome dictionary
 @fixture
-def example_outcome(scope='module'):
-    return {'burst_altitude': 8e3, 'burst_energy': 7e3, 'burst_distance': 90e3, 'burst_peak_dedz': 1e3, 'outcome': 'Airburst'}
+def example_outcome(scope="module"):
+    return {
+        "burst_altitude": 8e3,
+        "burst_energy": 7e3,
+        "burst_distance": 90e3,
+        "burst_peak_dedz": 1e3,
+        "outcome": "Airburst",
+    }
 
 
 # Zero Location test

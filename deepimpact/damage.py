@@ -69,10 +69,47 @@ def damage_zones(outcome, lat, lon, bearing, pressures):
 
 def find_destination(lat, lon, bearing, distance):
     """
-    Find the destination point given starting latitude, longitude, bearing and distance.
-    Assumes a spherical Earth.
+    Calculate the latitude and longitude of the surface zero location point, given an entry
+    latitude and longitude, a bearing, and a burst distance.
+
+    Parameters
+    ----------
+
+    lat : float
+        The latitude of the entry point in degrees.
+    lon : float
+        The longitude of the entry point in degrees.
+    bearing : float
+        The bearing from the entry point in degrees. This is the angle measured
+        in degrees clockwise from the north.
+    distance : float
+        The distance to the destination from the entry point in meters.
+
+    Returns
+    -------
+
+    zero_lat : float
+        The latitude of the surface zero location point in degrees.
+    zero_lon : float
+        The longitude of the surface zero location point in degrees.
+
+    Notes
+    -----
+
+    - The function assumes a spherical Earth, which is an acceptable
+    approximation for most purposes.
+    - The function checks for edge cases at the poles and adjusts the longitude
+      accordingly if the starting point is exactly at the pole.
+    - The calculated longitude is adjusted to be within the range of -180
+    to 180 degrees.
     """
     R = 6371000  # Radius of the Earth in meters
+
+    if lat < -90 or lat > 90:
+        raise ValueError("The entry latitude is out of range.")
+    if lon < -180 or lon > 180:
+        raise ValueError("The entry longitude is out of range.")
+
     bearing = math.radians(bearing)  # Convert bearing to radians
 
     phi1 = math.radians(lat)  # Current lat point converted to radians
@@ -85,13 +122,17 @@ def find_destination(lat, lon, bearing, distance):
         new_lon = (new_lon + 180) % 360 - 180
         return lat, new_lon
 
-    sin_phi2 = math.sin(phi1) * math.cos(distance / R) + math.cos(phi1) * math.sin(distance / R) * math.cos(bearing)
+    sin_phi2 = math.sin(phi1) * math.cos(distance / R) + math.cos(phi1) * math.sin(
+        distance / R
+    ) * math.cos(bearing)
     lat2 = math.asin(sin_phi2)
 
-    tan_lambda = (math.sin(bearing) * math.sin(distance / R) * math.cos(phi1)) / (math.cos(distance / R) - math.sin(phi1) * math.sin(lat2))
+    tan_lambda = (math.sin(bearing) * math.sin(distance / R) * math.cos(phi1)) / (
+        math.cos(distance / R) - math.sin(phi1) * math.sin(lat2)
+    )
     lon2 = math.atan(tan_lambda) + lambda1
 
-    # Adjust lon2 only if it's outside the range of -π to π radians
+    # Adjust if it's outside the range
     if lon2 < -math.pi or lon2 > math.pi:
         lon2 = (lon2 + math.pi) % (2 * math.pi) - math.pi
 
@@ -286,17 +327,20 @@ def impact_risk(
             (blast_lat, blast_lon), radii=damage_rad
         )
         if len(postcodes) != 0:
-            postcodes_all=postcodes_all + postcodes[-1]
+            postcodes_all = postcodes_all + postcodes[-1]
             population_all.append(population[-1])
         print(f"data{i}end")
     element_counts = Counter(postcodes_all)
     postcodes_code = list(element_counts.keys())
     postcodes_prob = list(element_counts.values())
-    postcodes_prob = [i/data.shape[0] for i in postcodes_prob]
+    postcodes_prob = [i / data.shape[0] for i in postcodes_prob]
 
     return (
-        pd.DataFrame({'Postcode': postcodes_code, 'probability': postcodes_prob}),
-        {"mean": float(np.mean(population_all)), "stdev": float(np.std(population_all))},
+        pd.DataFrame({"Postcode": postcodes_code, "probability": postcodes_prob}),
+        {
+            "mean": float(np.mean(population_all)),
+            "stdev": float(np.std(population_all)),
+        },
     )
 
 
