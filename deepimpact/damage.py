@@ -253,6 +253,9 @@ def impact_risk(
         population affected by the impact, with keys 'mean' and 'stdev'.
         Values are floats.
     """
+    #check input
+    if not isinstance(pressure, (int, float, complex)):
+        return (False, False)
 
     #read senario
     data = pd.read_csv(impact_file)
