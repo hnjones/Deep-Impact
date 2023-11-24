@@ -133,14 +133,14 @@ def find_destination(lat, lon, bearing, distance):
         return lat, new_lon
 
     # Calculate the new latitude
-    sin_phi2 = math.sin(phi1) * math.cos(distance / R) + math.cos(
-        phi1) * math.sin(distance / R) * math.cos(bearing)
+    sin_phi2 = math.sin(phi1) * math.cos(distance / R) + math.cos(phi1) * math.sin(
+        distance / R
+    ) * math.cos(bearing)
 
     lat2 = math.asin(sin_phi2)
 
     # Calculate the new longitude
-    tan_lambda = (math.sin(bearing) * math.sin(distance / R) * math.cos(phi1)
-                  ) / (
+    tan_lambda = (math.sin(bearing) * math.sin(distance / R) * math.cos(phi1)) / (
         math.cos(distance / R) - math.sin(phi1) * math.sin(lat2)
     )
     lon2 = math.atan(tan_lambda) + lambda1
@@ -203,7 +203,7 @@ def brents_method(z_b, E_k, pressure, x0, x1, max_iter=100, tolerance=1e-5):
 
     fx0 = airblast_func(x0, z_b=z_b, E_k=E_k, pressure=pressure)
     fx1 = airblast_func(x1, z_b=z_b, E_k=E_k, pressure=pressure)
-    
+
     # Check if the root is within the interval
     if fx0 * fx1 >= 0:
         return 0
@@ -296,8 +296,7 @@ def calculate_damage_radius(target_pressures, z_b, E_k):
 def impact_risk(
     planet,
     impact_file=os.sep.join(
-        (os.path.dirname(__file__), "..", "resources",
-         "impact_parameter_list.csv")
+        (os.path.dirname(__file__), "..", "resources", "impact_parameter_list.csv")
     ),
     pressure=30.0e3,
     nsamples=None,
@@ -394,8 +393,7 @@ def impact_risk(
     postcodes_prob = [i / data.shape[0] for i in postcodes_prob]
 
     return (
-        pd.DataFrame({"Postcode": postcodes_code,
-                     "probability": postcodes_prob}),
+        pd.DataFrame({"Postcode": postcodes_code, "probability": postcodes_prob}),
         {
             "mean": float(np.mean(population_all)),
             "stdev": float(np.std(population_all)),
@@ -404,7 +402,6 @@ def impact_risk(
 
 
 def impact_risk_plot(probability):
-
     """
     Plot the probability of postcodes using heatmap.
 
@@ -429,8 +426,7 @@ def impact_risk_plot(probability):
     # read the full postcode location
     data_post = pd.read_csv(
         os.sep.join(
-            (os.path.dirname(__file__), "..", "resources",
-             "full_postcodes.csv")
+            (os.path.dirname(__file__), "..", "resources", "full_postcodes.csv")
         )
     )
 
@@ -444,13 +440,11 @@ def impact_risk_plot(probability):
 
     # plot map
     m = folium.Map(
-        location=[data_with_weights.Latitude[0],
-                  data_with_weights.Longitude[0]],
+        location=[data_with_weights.Latitude[0], data_with_weights.Longitude[0]],
         zoom_start=13,
     )
     HeatMap(
-        data_with_weights[["Latitude", "Longitude",
-                          "probability"]].values.tolist(),
+        data_with_weights[["Latitude", "Longitude", "probability"]].values.tolist(),
         gradient={0.4: "blue", 0.65: "lime", 1: "red"},
         radius=15,
         blur=10,
