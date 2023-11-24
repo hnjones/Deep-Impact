@@ -13,9 +13,9 @@ import folium
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        # 使用ui文件导入定义界面类
+        # load ui file for interface 
         self.ui = Ui_MainWindow()
-        # 初始化界面
+        # initial
         self.ui.setupUi(self)
         # table
         self.ui.table.setColumnWidth(0, 80)
@@ -32,7 +32,7 @@ class MainWindow(QMainWindow):
             self.ui.checkbox3,
             self.ui.checkbox4,
         ]
-        # check嵌入table
+        # check into table
         item1 = QTableWidgetItem()
         item2 = QTableWidgetItem()
         item3 = QTableWidgetItem()
@@ -45,9 +45,8 @@ class MainWindow(QMainWindow):
         self.ui.table.setCellWidget(1, 2, self.ui.checkbox2)
         self.ui.table.setCellWidget(2, 2, self.ui.checkbox3)
         self.ui.table.setCellWidget(3, 2, self.ui.checkbox4)
-        # html界面
+        # html browser
         self.ui.browser = QWebEngineView(self.ui.widget)
-        # layout = QVBoxLayout(self.ui.centralwidget)
         self.ui.browser.setGeometry(
             self.ui.widget.x(),
             self.ui.widget.y(),
@@ -56,8 +55,6 @@ class MainWindow(QMainWindow):
         )
         # layout.addWidget(self.ui.browser)
         print(self.ui.browser.size())
-        # self.ui.browser.move(10, 10)  # Set new position
-        # self.ui.browser.resize(50, 50)  # Set new size
         print(self.ui.browser.size())
         # color list
         self.circle_list = ["green", "cornflowerblue", "pink", "red"]
@@ -68,7 +65,7 @@ class MainWindow(QMainWindow):
         self.ui.checkbox2.stateChanged.connect(self.checkbox2)
         self.ui.checkbox3.stateChanged.connect(self.checkbox3)
         self.ui.checkbox4.stateChanged.connect(self.checkbox4)
-        # 操作
+        # connect
         self.ui.generate_buttom.clicked.connect(self.button_generation)
         self.ui.plot_button.clicked.connect(self.plot_html)
 
@@ -86,7 +83,7 @@ class MainWindow(QMainWindow):
             float(self.ui.bearing.text()),
         ]
 
-        # 进入计算--sover
+        # sover
         earth = deepimpact.Planet()
         result = earth.solve_atmospheric_entry(
             radius=self.input[0],
@@ -97,7 +94,7 @@ class MainWindow(QMainWindow):
         )
         result = earth.calculate_energy(result)
         outcome = earth.analyse_outcome(result)
-        # damage --输入zero pint + radius
+        # damage(input zero pint + radius)
         pressures = [1e3, 4e3, 30e3, 50e3]
         a = deepimpact.damage_zones(
             outcome,
@@ -111,7 +108,7 @@ class MainWindow(QMainWindow):
         self.damage_rad = a[2]
 
         self.damage_rad_num = len(self.damage_rad)
-        # 显示type + zero pint + radius
+        # show type + zero pint + radius result  
         # zero point
         print(self.damage_rad)
         self.ui.type.clear()
@@ -133,13 +130,13 @@ class MainWindow(QMainWindow):
 
         self.input = []
 
-    # 画图--根据判断打钩进行绘图
+    # plot html -- change map accoding to checkbox 
     def plot_html(self):
         map = folium.Map(
             location=[self.blast_lat, self.blast_lon],
             control_scale=True, zoom_start=7
         )
-        # 绘图
+        # plot
         for ii in range(self.damage_rad_num):
             if self.plot[ii]:
                 folium.Circle(
@@ -150,16 +147,14 @@ class MainWindow(QMainWindow):
                     fillOpacity=0.1,
                 ).add_to(map)
 
-        # 保存
+        # save html
         map.save("ui_map.html")
-        # 画图
+        # html browser
         with open("./ui_map.html", "r", encoding="utf-8") as file:
             html_content = file.read()
-            # print(html_content)
-        # self.ui.htmlscreen.setHtml(html_content)
         self.ui.browser.setHtml(html_content)
 
-    # checkbox 变化
+    # checkbox change
     def checkbox1(self):
         self.plot[0] = not self.plot[0]
 
