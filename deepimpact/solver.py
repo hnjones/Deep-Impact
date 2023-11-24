@@ -107,7 +107,37 @@ class Planet:
             self.rhoa = lambda x: rho0
 
     def rk4_step(self, f, y, t, dt):
-        """RK4."""
+        """
+        Perform a single step of the RK4 integration method.
+
+        Parameters
+        ----------
+        f : callable
+            The derivative function of the ODE, f(t, y), which returns the rate of change at a time t.
+        y : float or array_like
+            The current value of the dependent variable of the ODE.
+        t : float
+            The current time value.
+        dt : float
+            The time step to advance the solution.
+
+        Returns
+        -------
+        float or ndarray
+            The estimated value of the dependent variable after one time step.
+
+        Examples
+        --------
+        Consider a simple ODE dy/dt = -2y, starting at y(0) = 1.
+
+        >>> def dydt(t, y):
+        >>>     return -2 * y
+        >>> y_start = 1
+        >>> t_start = 0
+        >>> dt = 0.1
+        >>> rk4_step(dydt, y_start, t_start, dt)
+        0.8187307530779818
+        """
         k1 = dt * f(t, y)
         k2 = dt * f(t + dt / 2, y + k1 / 2)
         k3 = dt * f(t + dt / 2, y + k2 / 2)
@@ -125,24 +155,64 @@ class Planet:
         dt=0.25,
         radians=False,
     ):
+        """
+        Simulate the atmospheric entry of an object, considering factors like 
+        fragmentation, velocity change, and trajectory alteration.
+
+        Parameters
+        ----------
+        radius : float
+            Radius of the object (in meters).
+        velocity : float
+            Initial velocity of the object (in meters per second).
+        density : float
+            Density of the object (in kilograms per cubic meter).
+        strength : float
+            Material strength of the object (in Pascals).
+        angle : float
+            Entry angle of the object relative to the surface (in degrees, unless `radians` is True).
+        init_altitude : float, optional
+            Initial altitude of the object (in meters), by default 100,000 meters (100 km).
+        dt : float, optional
+            Time step for the simulation (in seconds), by default 0.25 seconds.
+        radians : bool, optional
+            If True, interprets the angle in radians; otherwise in degrees, by default False.
+
+        Returns
+        -------
+        DataFrame
+            A pandas DataFrame containing the simulation results over time. Columns include time,
+            velocity, mass, angle, altitude, distance, and radius.
+
+        Examples
+        --------
+        Simulate an object with a radius of 0.5 meters, velocity of 12,000 m/s, density of 3000 kg/m^3,
+        strength of 1e7 Pascals, and an entry angle of 45 degrees:
+
+        >>> planet = Planet()
+        >>> result = planet.solve_atmospheric_entry(0.5, 12000, 3000, 1e7, 45)
+        >>> print(result.head())
+        """
+
         if not radians:
             angle = np.radians(angle)
 
-        # def simple_equations_of_motion(t, y):
-        #     v, m, theta, z, x, r = y
-        #     rho_a = self.rhoa(z)
-        #     A = np.pi * r**2
-
-        #     dvdt = (-self.Cd * rho_a * A * v**2) / (2 * m)
-        #     dmdt = 0
-        #     dthetadt = 0
-        #     dzdt = -v * np.sin(theta)
-        #     dxdt = v * np.cos(theta)
-        #     drdt = 0
-
-        #     return np.array([dvdt, dmdt, dthetadt, dzdt, dxdt, drdt])
-
         def equations_of_motion(t, y):
+            """
+            Calculate the derivatives of the state variables for atmospheric entry.
+
+            Parameters
+            ----------
+            t : float
+                Current time in seconds.
+            y : ndarray
+                Array of current state variables [velocity, mass, angle, altitude, distance, radius].
+
+            Returns
+            -------
+            ndarray
+                Array of derivatives [dv/dt, dm/dt, dtheta/dt, dz/dt, dx/dt, dr/dt].
+            """
             v, m, theta, z, x, r = y
             rho_a = self.rhoa(z)
             A = np.pi * r**2
@@ -194,9 +264,7 @@ class Planet:
                 break
             if len(results) > 0 and y0[3] > results[-1][4]:
                 break
-            # if len(results) > 0:
-            #     altitude_change = abs(y0[3] - results[-1][4])
-            #     if altitude_change < 1:
+
 
             # Check for height changes when the cumulative time meets or
             # exceeds theuser-defined dt
@@ -233,6 +301,34 @@ class Planet:
         return result_df
 
     def calculate_energy(self, result):
+        """
+        Calculate the kinetic energy and its variation per unit altitude of an object.
+
+        This method computes the kinetic energy in kilotons of TNT and the rate of 
+        energy dissipation per kilometer of altitude change. It adds or updates the 
+        'dedz' column in the provided DataFrame, representing the energy dissipation rate.
+
+        Parameters
+        ----------
+        result : DataFrame
+            A pandas DataFrame with columns 'mass', 'velocity', and 'altitude', representing 
+            the mass in kilograms, velocity in meters per second, and altitude in meters, 
+            respectively, of an object at various time steps.
+
+        Returns
+        -------
+        DataFrame
+            The input DataFrame with an additional or updated column 'dedz', representing 
+            the rate of energy dissipation per kilometer.
+
+        Examples
+        --------
+        >>> planet = Planet()
+        >>> entry_result = planet.solve_atmospheric_entry(0.5, 12000, 3000, 1e7, 45)
+        >>> energy_result = planet.calculate_energy(entry_result)
+        >>> print(energy_result.head())
+        """
+
         # Calculate the kinetic energy
         kinetic_energy = 0.5 * result['mass'] * result['velocity']**2
 
@@ -339,6 +435,15 @@ class Planet:
         return outcome
 
     def read_csv(self):
+        """
+    Read atmospheric data from a CSV file and initialize interpolation.
+
+    This method reads altitude and density data from a CSV file specified by 
+    `self.atmos_filename`. It initializes an interpolator for density as a function 
+    of altitude using cubic interpolation.
+
+    The CSV file is expected to have two columns: altitude and density, with a header row.
+    """
         with open(self.atmos_filename, 'r') as file:
             next(file)  # Skip the header line
             data = np.loadtxt(file)
@@ -349,4 +454,24 @@ class Planet:
                                          fill_value="extrapolate")
 
     def interpolate_density(self, x):
+        """
+        Interpolate the atmospheric density at a given altitude.
+
+        Parameters
+        ----------
+        x : float or array_like
+            The altitude(s) at which to interpolate density.
+
+        Returns
+        -------
+        float or ndarray
+            The interpolated density value(s) at the given altitude(s).
+
+        Examples
+        --------
+        >>> planet = Planet()
+        >>> planet.read_csv()
+        >>> density_at_10km = planet.interpolate_density(10000)
+        >>> print(density_at_10km)
+        """
         return self.interpolator(x)
