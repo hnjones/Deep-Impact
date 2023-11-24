@@ -88,16 +88,14 @@ def test_atmos_filename(planet):
 def test_solve_atmospheric_entry(result):
     assert type(result) is pd.DataFrame
 
-    for key in ("velocity", "mass", "angle",
-                "altitude", "distance", "radius", "time"):
+    for key in ("velocity", "mass", "angle", "altitude", "distance", "radius", "time"):
         assert key in result.columns
 
     # Verify that the result is a pandas DataFrame
     assert isinstance(result, pd.DataFrame), "Result not a pandas DataFrame"
 
     # Check that numeric columns contain appropriate data types
-    for column in ["velocity", "mass", "angle",
-                   "altitude", "distance", "radius"]:
+    for column in ["velocity", "mass", "angle", "altitude", "distance", "radius"]:
         assert pd.api.types.is_numeric_dtype(
             result[column]
         ), f"Column '{column}' should have a numeric data type"
@@ -133,15 +131,13 @@ def test_scenario(planet):
     result = planet.solve_atmospheric_entry(**inputs)
 
     assert type(result) is pd.DataFrame
-    for key in ("velocity", "mass", "angle",
-                "altitude", "distance", "radius", "time"):
+    for key in ("velocity", "mass", "angle", "altitude", "distance", "radius", "time"):
         assert key in result.columns
 
     # Load the expected scenario data
     expected_data = load_expected_data()
 
-    assert isinstance(result, pd.DataFrame
-                      ), "Result should be a pandas DataFrame"
+    assert isinstance(result, pd.DataFrame), "Result should be a pandas DataFrame"
     num_rows_to_compare = 20  #
     for column in expected_data.columns:
         if column not in inputs:
@@ -239,17 +235,14 @@ def test_known_data_points(earth):
 
 def test_interpolation(earth):
     expected_interpolated_density_3000 = 0.9091
-    assert np.isclose(earth.rhoa(3000),
-                      expected_interpolated_density_3000, atol=1e-3)
+    assert np.isclose(earth.rhoa(3000), expected_interpolated_density_3000, atol=1e-3)
     expected_interpolated_density_25000 = 0.0395
-    assert np.isclose(earth.rhoa(25000),
-                      expected_interpolated_density_25000, atol=1e-3)
+    assert np.isclose(earth.rhoa(25000), expected_interpolated_density_25000, atol=1e-3)
 
 
 def test_extrapolation(earth):
     expected_extrapolated_density = 0.000003
-    assert np.isclose(earth.rhoa(89700),
-                      expected_extrapolated_density, atol=1e-3)
+    assert np.isclose(earth.rhoa(89700), expected_extrapolated_density, atol=1e-3)
     assert np.isclose(earth.rhoa(110000), 0.0000001, atol=1e-3)
     # Test negative altitude.
     assert np.isclose(earth.rhoa(-1000), 1.347, atol=1e-3)
@@ -266,8 +259,7 @@ def test_extrapolation(earth):
 
 def test_energy_calculation_varying_mass(planet):
     result = pd.DataFrame(
-        {"mass": [1000, 500], "velocity":
-         [100, 100], "altitude": [10000, 9500]}
+        {"mass": [1000, 500], "velocity": [100, 100], "altitude": [10000, 9500]}
     )
     updated_result = planet.calculate_energy(result)
     assert updated_result["dedz"].iloc[0] != updated_result["dedz"].iloc[1]
@@ -275,8 +267,7 @@ def test_energy_calculation_varying_mass(planet):
 
 def test_energy_calculation_constant_mass(planet):
     result = pd.DataFrame(
-        {"mass": [1000, 1000], "velocity": [100, 200],
-         "altitude": [10000, 9500]}
+        {"mass": [1000, 1000], "velocity": [100, 200], "altitude": [10000, 9500]}
     )
     updated_result = planet.calculate_energy(result)
     assert updated_result["dedz"].iloc[0] != updated_result["dedz"].iloc[1]

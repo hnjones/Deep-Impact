@@ -72,15 +72,11 @@ def final_scenario(earth):
     # Write postcodes to a CSV file
     with open("postcodes.txt", "w", newline="") as file:
         # Writing the number of total postcodes impacted
-        file.write(
-            "Total Postcodes impacted: " + str(len(postcodes[0])) + "\n"
-        )
+        file.write("Total Postcodes impacted: " + str(len(postcodes[0])) + "\n")
         file.write("\n")
 
         # Writing the number of highest damaged postcodes
-        file.write(
-            "Highest damaged Postcodes: " + str(len(postcodes[-1])) + "\n"
-        )
+        file.write("Highest damaged Postcodes: " + str(len(postcodes[-1])) + "\n")
         file.write("\n")
 
         # Writing the header for highest damaged postcodes

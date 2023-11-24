@@ -4,11 +4,12 @@ except ImportError:
     from distutils.core import setup
 
 
-setup(name='deepimpact',
-      use_scm_version=True,
-      setup_requires=['setuptools_scm'],
-      version='1.0',
-      description='Asteroid atmospheric entry solver',
-      author='ACSE project',
-      packages=['deepimpact']
-      )
+setup(
+    name="deepimpact",
+    use_scm_version=True,
+    setup_requires=["setuptools_scm"],
+    version="1.0",
+    description="Asteroid atmospheric entry solver",
+    author="ACSE project",
+    packages=["deepimpact"],
+)

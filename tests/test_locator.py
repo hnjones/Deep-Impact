@@ -92,8 +92,7 @@ def test_find_nearest_coordinates():
 def test_get_population_by_radius():
     # test for the edge cases for population function
     locator = GeospatialLocator()
-    populations = locator.get_population_by_radius((51.4981,
-                                                    -0.1773), [10, 500, 1000])
+    populations = locator.get_population_by_radius((51.4981, -0.1773), [10, 500, 1000])
     assert len(populations) == 3
     assert all(isinstance(p, int) for p in populations)
     assert all(p >= 0 for p in populations)

@@ -8,9 +8,9 @@ import deepimpact
 earth = deepimpact.Planet()
 
 # Solve the atmospheric entry problem for a given set of input parameters
-result = earth.solve_atmospheric_entry(radius=35, angle=45,
-                                       strength=1e7, density=3000,
-                                       velocity=19e3)
+result = earth.solve_atmospheric_entry(
+    radius=35, angle=45, strength=1e7, density=3000, velocity=19e3
+)
 
 # Calculate the kinetic energy lost per unit altitude and add it
 # as a column to the result dataframe
@@ -26,10 +26,9 @@ outcome = earth.analyse_outcome(result)
 # Calculate the blast location and damage radius for several pressure levels
 pressures = [1e3, 4e3, 30e3, 50e3]
 
-blast_lat, blast_lon, damage_rad = deepimpact.damage_zones(outcome,
-                                                           lat=55.2, lon=-2.5,
-                                                           bearing=217.,
-                                                           pressures=pressures)
+blast_lat, blast_lon, damage_rad = deepimpact.damage_zones(
+    outcome, lat=55.2, lon=-2.5, bearing=217.0, pressures=pressures
+)
 
 # Plot a circle to show the limit of the lowest damage level
 damage_map = deepimpact.plot_circle(blast_lat, blast_lon, damage_rad[0])
@@ -39,12 +38,10 @@ damage_map.save("damage_map.html")
 locator = deepimpact.GeospatialLocator()
 
 # Find the postcodes in the damage radii
-postcodes = locator.get_postcodes_by_radius((blast_lat, blast_lon),
-                                            radii=damage_rad)
+postcodes = locator.get_postcodes_by_radius((blast_lat, blast_lon), radii=damage_rad)
 
 # Find the population in each postcode
-population = locator.get_population_by_radius((blast_lat, blast_lon),
-                                              radii=damage_rad)
+population = locator.get_population_by_radius((blast_lat, blast_lon), radii=damage_rad)
 
 # Print the number of people affected in each damage zone
 print()
@@ -69,5 +66,7 @@ probability_sorted = probability.sort_values(by="probability", ascending=False)
 
 print(probability_sorted.head())
 print(probability.head())
-print("Total population affected: " +
-      f"{population['mean']:,.0f} +/- {population['stdev']:,.0f}")
+print(
+    "Total population affected: "
+    + f"{population['mean']:,.0f} +/- {population['stdev']:,.0f}"
+)

@@ -27,7 +27,6 @@ def loc(deepimpact):
 
 
 def test_damage_zones(deepimpact):
-
     outcome = {
         "burst_peak_dedz": 1000.0,
         "burst_altitude": 9000.0,
@@ -47,7 +46,6 @@ def test_damage_zones(deepimpact):
 
 
 def test_longlist_pressure(deepimpact):
-
     outcome = {
         "burst_peak_dedz": 1000.0,
         "burst_altitude": 9000.0,
@@ -67,7 +65,6 @@ def test_longlist_pressure(deepimpact):
 
 
 def test_empty_list(deepimpact):
-
     outcome = {
         "burst_peak_dedz": 1000.0,
         "burst_altitude": 9000.0,
@@ -86,7 +83,6 @@ def test_empty_list(deepimpact):
 
 # Test is the pressure is extremely large
 def test_extreme_pressure(deepimpact):
-
     outcome = {
         "burst_peak_dedz": 1000.0,
         "burst_altitude": 9000.0,
@@ -95,8 +91,7 @@ def test_extreme_pressure(deepimpact):
         "outcome": "Airburst",
     }
 
-    blat, blon, damrad = deepimpact.damage_zones(outcome, 55.0, 0.0,
-                                                 135.0, [80e4])
+    blat, blon, damrad = deepimpact.damage_zones(outcome, 55.0, 0.0, 135.0, [80e4])
 
     assert type(blat) is float
     assert type(blon) is float
@@ -105,7 +100,6 @@ def test_extreme_pressure(deepimpact):
 
 
 def test_great_circle_distance(deepimpact):
-
     pnts1 = np.array([[54.0, 0.0], [55.0, 1.0], [54.2, -3.0]])
     pnts2 = np.array([[55.0, 1.0], [56.0, -2.1], [54.001, -0.003]])
 
@@ -124,9 +118,14 @@ def test_great_circle_distance(deepimpact):
 
 # Fixture for common outcome dictionary
 @fixture
-def example_outcome(scope='module'):
-    return {'burst_altitude': 8e3, 'burst_energy': 7e3, 'burst_distance': 90e3,
-            'burst_peak_dedz': 1e3, 'outcome': 'Airburst'}
+def example_outcome(scope="module"):
+    return {
+        "burst_altitude": 8e3,
+        "burst_energy": 7e3,
+        "burst_distance": 90e3,
+        "burst_peak_dedz": 1e3,
+        "outcome": "Airburst",
+    }
 
 
 # Zero Location test
@@ -148,8 +147,7 @@ def test_zero_burst_distance(deepimpact, example_outcome):
         "burst_energy": 6000.0,
         "outcome": "Airburst",
     }
-    blat, blon, _ = deepimpact.damage_zones(outcome, 52.79, -2.95,
-                                            135, pressures=[1e3])
+    blat, blon, _ = deepimpact.damage_zones(outcome, 52.79, -2.95, 135, pressures=[1e3])
     assert blat == 52.79 and blon == -2.95
 
     example_outcome["burst_distance"] = 0
@@ -197,7 +195,6 @@ def test_extremely_large_inputs(deepimpact, example_outcome):
 
 
 def test_impact_risk(deepimpact, planet):
-
     probability, population = deepimpact.impact_risk(planet)
 
     assert type(probability) is pd.DataFrame
@@ -210,8 +207,7 @@ def test_impact_risk(deepimpact, planet):
 
     # common test
     risk_file = os.sep.join(
-        (os.path.dirname(__file__), "..", "resources",
-         "impact_parameter_list.csv")
+        (os.path.dirname(__file__), "..", "resources", "impact_parameter_list.csv")
     )
     assert os.path.isfile(risk_file)
 
@@ -227,7 +223,6 @@ def test_impact_risk(deepimpact, planet):
 
     # special case: nsampel = None
     probability, population = deepimpact.impact_risk(planet)
-    assert all(
-        [element <= 1 for element in probability["probability"]]) and all(
-            [element >= 0 for element in probability["probability"]]
+    assert all([element <= 1 for element in probability["probability"]]) and all(
+        [element >= 0 for element in probability["probability"]]
     )
