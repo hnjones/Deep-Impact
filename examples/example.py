@@ -63,6 +63,11 @@ print()
 # Example usage of impact_risk function
 # Uses the default file impact_parameter_list.csv in the resources folder
 probability, population = deepimpact.impact_risk(earth, pressure=30e3)
+
+# Sort the probability DataFrame by the 'Probability' col in descending order
+probability_sorted = probability.sort_values(by="probability", ascending=False)
+
+print(probability_sorted.head())
 print(probability.head())
 print("Total population affected: " +
       f"{population['mean']:,.0f} +/- {population['stdev']:,.0f}")
