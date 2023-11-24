@@ -29,68 +29,52 @@ class Ui_MainWindow(object):
         self.formLayout_2.setObjectName("formLayout_2")
         self.label = QtWidgets.QLabel(self.layoutWidget)
         self.label.setObjectName("label")
-        self.formLayout_2.setWidget(0, QtWidgets.QFormLayout.LabelRole,
-                                    self.label)
+        self.formLayout_2.setWidget(0, QtWidgets.QFormLayout.LabelRole, self.label)
         self.label_2 = QtWidgets.QLabel(self.layoutWidget)
         self.label_2.setObjectName("label_2")
-        self.formLayout_2.setWidget(1, QtWidgets.QFormLayout.LabelRole,
-                                    self.label_2)
+        self.formLayout_2.setWidget(1, QtWidgets.QFormLayout.LabelRole, self.label_2)
         self.angle = QtWidgets.QLineEdit(self.layoutWidget)
         self.angle.setObjectName("angle")
-        self.formLayout_2.setWidget(1, QtWidgets.QFormLayout.FieldRole,
-                                    self.angle)
+        self.formLayout_2.setWidget(1, QtWidgets.QFormLayout.FieldRole, self.angle)
         self.label_3 = QtWidgets.QLabel(self.layoutWidget)
         self.label_3.setObjectName("label_3")
-        self.formLayout_2.setWidget(2, QtWidgets.QFormLayout.LabelRole,
-                                    self.label_3)
+        self.formLayout_2.setWidget(2, QtWidgets.QFormLayout.LabelRole, self.label_3)
         self.strength = QtWidgets.QLineEdit(self.layoutWidget)
         self.strength.setObjectName("strength")
-        self.formLayout_2.setWidget(2, QtWidgets.QFormLayout.FieldRole,
-                                    self.strength)
+        self.formLayout_2.setWidget(2, QtWidgets.QFormLayout.FieldRole, self.strength)
         self.label_5 = QtWidgets.QLabel(self.layoutWidget)
         self.label_5.setObjectName("label_5")
-        self.formLayout_2.setWidget(3, QtWidgets.QFormLayout.LabelRole,
-                                    self.label_5)
+        self.formLayout_2.setWidget(3, QtWidgets.QFormLayout.LabelRole, self.label_5)
         self.density = QtWidgets.QLineEdit(self.layoutWidget)
         self.density.setObjectName("density")
-        self.formLayout_2.setWidget(3, QtWidgets.QFormLayout.FieldRole,
-                                    self.density)
+        self.formLayout_2.setWidget(3, QtWidgets.QFormLayout.FieldRole, self.density)
         self.label_4 = QtWidgets.QLabel(self.layoutWidget)
         self.label_4.setObjectName("label_4")
-        self.formLayout_2.setWidget(4, QtWidgets.QFormLayout.LabelRole,
-                                    self.label_4)
+        self.formLayout_2.setWidget(4, QtWidgets.QFormLayout.LabelRole, self.label_4)
         self.velocity = QtWidgets.QLineEdit(self.layoutWidget)
         self.velocity.setObjectName("velocity")
-        self.formLayout_2.setWidget(4, QtWidgets.QFormLayout.FieldRole,
-                                    self.velocity)
+        self.formLayout_2.setWidget(4, QtWidgets.QFormLayout.FieldRole, self.velocity)
         self.label_6 = QtWidgets.QLabel(self.layoutWidget)
         self.label_6.setObjectName("label_6")
-        self.formLayout_2.setWidget(5, QtWidgets.QFormLayout.LabelRole,
-                                    self.label_6)
+        self.formLayout_2.setWidget(5, QtWidgets.QFormLayout.LabelRole, self.label_6)
         self.latitude = QtWidgets.QLineEdit(self.layoutWidget)
         self.latitude.setObjectName("latitude")
-        self.formLayout_2.setWidget(5, QtWidgets.QFormLayout.FieldRole,
-                                    self.latitude)
+        self.formLayout_2.setWidget(5, QtWidgets.QFormLayout.FieldRole, self.latitude)
         self.label_7 = QtWidgets.QLabel(self.layoutWidget)
         self.label_7.setObjectName("label_7")
-        self.formLayout_2.setWidget(6, QtWidgets.QFormLayout.LabelRole,
-                                    self.label_7)
+        self.formLayout_2.setWidget(6, QtWidgets.QFormLayout.LabelRole, self.label_7)
         self.longitude = QtWidgets.QLineEdit(self.layoutWidget)
         self.longitude.setObjectName("longitude")
-        self.formLayout_2.setWidget(6, QtWidgets.QFormLayout.FieldRole,
-                                    self.longitude)
+        self.formLayout_2.setWidget(6, QtWidgets.QFormLayout.FieldRole, self.longitude)
         self.label_8 = QtWidgets.QLabel(self.layoutWidget)
         self.label_8.setObjectName("label_8")
-        self.formLayout_2.setWidget(7, QtWidgets.QFormLayout.LabelRole,
-                                    self.label_8)
+        self.formLayout_2.setWidget(7, QtWidgets.QFormLayout.LabelRole, self.label_8)
         self.bearing = QtWidgets.QLineEdit(self.layoutWidget)
         self.bearing.setObjectName("bearing")
-        self.formLayout_2.setWidget(7, QtWidgets.QFormLayout.FieldRole,
-                                    self.bearing)
+        self.formLayout_2.setWidget(7, QtWidgets.QFormLayout.FieldRole, self.bearing)
         self.radius = QtWidgets.QLineEdit(self.layoutWidget)
         self.radius.setObjectName("radius")
-        self.formLayout_2.setWidget(0, QtWidgets.QFormLayout.FieldRole,
-                                    self.radius)
+        self.formLayout_2.setWidget(0, QtWidgets.QFormLayout.FieldRole, self.radius)
         self.table = QtWidgets.QTableWidget(self.centralwidget)
         self.table.setGeometry(QtCore.QRect(660, 340, 321, 141))
         self.table.setObjectName("table")
@@ -130,8 +114,7 @@ class Ui_MainWindow(object):
         self.horizontalLayoutWidget = QtWidgets.QWidget(self.centralwidget)
         self.horizontalLayoutWidget.setGeometry(QtCore.QRect(10, 500, 601, 31))
         self.horizontalLayoutWidget.setObjectName("horizontalLayoutWidget")
-        self.horizontalLayout_11 = QtWidgets.QHBoxLayout(
-            self.horizontalLayoutWidget)
+        self.horizontalLayout_11 = QtWidgets.QHBoxLayout(self.horizontalLayoutWidget)
         self.horizontalLayout_11.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout_11.setObjectName("horizontalLayout_11")
         self.label_15 = QtWidgets.QLabel(self.horizontalLayoutWidget)

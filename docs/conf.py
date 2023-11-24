@@ -1,12 +1,22 @@
 import sys
 import os
 
-sys.path.insert(0, os.path.abspath(os.sep.join((os.curdir, '..'))))
+# Add the project root directory to the sys.path
+sys.path.insert(0, os.path.abspath(os.path.join(os.curdir, "..")))
 
-project = 'Deep Impact'
-extensions = ['sphinx.ext.autodoc',
-              'sphinx.ext.napoleon']
-source_suffix = '.rst'
-master_doc = 'index'
-exclude_patterns = ['_build']
+# Project information
+project = "Deep Impact"
+author = "The Kuiper Team"
+
+# Sphinx extensions
+extensions = ["sphinx.ext.autodoc", "sphinx.ext.napoleon"]
+
+# Source file suffix and master document
+source_suffix = ".rst"
+master_doc = "index"
+
+# Patterns to exclude
+exclude_patterns = ["_build"]
+
+# Auto-documentation settings
 autoclass_content = "both"

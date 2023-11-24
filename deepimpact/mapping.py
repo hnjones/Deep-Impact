@@ -1,7 +1,7 @@
 """This module contains some useful mapping functions"""
 import folium
 
-__all__ = ['plot_circle']
+__all__ = ["plot_circle"]
 
 
 def plot_circle(lat, lon, radius, fmap=None, **kwargs):
@@ -35,7 +35,6 @@ def plot_circle(lat, lon, radius, fmap=None, **kwargs):
     if not fmap:
         fmap = folium.Map(location=[lat, lon], control_scale=True)
 
-    folium.Circle([lat, lon], radius, fill=True,
-                  fillOpacity=0.6, **kwargs).add_to(fmap)
+    folium.Circle([lat, lon], radius, fill=True, fillOpacity=0.6, **kwargs).add_to(fmap)
 
     return fmap

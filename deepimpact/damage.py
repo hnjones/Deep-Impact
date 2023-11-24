@@ -45,11 +45,8 @@ def damage_zones(outcome, lat, lon, bearing, pressures):
     --------
 
     >>> import deepimpact
-    >>> outcome = {'burst_altitude': 8e3, 'burst_energy': 7e3,
-                   'burst_distance': 90e3, 'burst_peak_dedz': 1e3,
-                   'outcome': 'Airburst'}
-    >>> deepimpact.damage_zones(outcome, 52.79, -2.95, 135,
-                                pressures=[1e3, 3.5e3, 27e3, 43e3])
+    >>> outcome = {'burst_altitude': 8e3, 'burst_energy': 7e3, 'burst_distance': 90e3, 'burst_peak_dedz': 1e3, 'outcome': 'Airburst'}
+    >>> deepimpact.damage_zones(outcome, 52.79, -2.95, 135, pressures=[1e3, 3.5e3, 27e3, 43e3])
     """
 
     # Replace this code with your own. For demonstration we just
@@ -101,15 +98,11 @@ def find_destination(lat, lon, bearing, distance):
 
     - The function assumes a spherical Earth, which is an acceptable
     approximation for most purposes.
-    - The function checks for edge cases at the poles and adjusts the longitude
-      accordingly if the starting point is exactly at the pole.
-    - The calculated longitude is adjusted to be within the range of -180
-    to 180 degrees.
 
     Examples
     --------
-    >>> import deepimpact
-    >>> deepimpact.find_destination(52.79, -2.95, 135, 90e3)
+    >>> from deepimpact.damage import find_destination
+    >>> find_destination(52.79, -2.95, 135, 90e3)
     (53.342, -2.95)
     """
     R = 6371000  # Radius of the Earth in meters
@@ -336,8 +329,7 @@ def impact_risk(
     Examples:
     >>> import deepimpact
     >>> planet = deepimpact.Planet()
-    >>> impact_risk(planet, impact_file="impact_parameter_list.csv",
-                    pressure=30e3, nsamples=10)
+    >>> impact_risk(planet, impact_file="resources/impact_parameter_list.csv", pressure=30e3, nsamples=10)
     (Postcode  probability)
     """
     # check input

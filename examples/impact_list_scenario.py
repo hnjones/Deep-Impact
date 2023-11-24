@@ -10,16 +10,14 @@ def run_scenario(file_suffix):
     earth = deepimpact.Planet()
     impact_file_name = f"impact_parameter_list_{file_suffix}.csv"
     impact_file_path = os.sep.join(
-        (os.path.dirname(__file__), "..",
-         "impact_parameter_lists", impact_file_name)
+        (os.path.dirname(__file__), "..", "impact_parameter_lists", impact_file_name)
     )
     probability, population = deepimpact.impact_risk(
         earth, impact_file=impact_file_path
     )
 
     # Sort the probability Df the 'Probability' col in descending order
-    probability_sorted = probability.sort_values(
-        by="probability", ascending=False)
+    probability_sorted = probability.sort_values(by="probability", ascending=False)
 
     # Prepare the output strings
     output_str1 = probability_sorted.head(20).to_string()

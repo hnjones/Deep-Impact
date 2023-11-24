@@ -72,7 +72,7 @@ class MainWindow(QMainWindow):
         self.ui.checkbox4.stateChanged.connect(self.checkbox4)
 
         # button
-        
+
         self.ui.generate_buttom.clicked.connect(self.button_generation)
         self.ui.plot_button.clicked.connect(self.plot_html)
 
@@ -89,7 +89,6 @@ class MainWindow(QMainWindow):
             float(self.ui.longitude.text()),
             float(self.ui.bearing.text()),
         ]
-
 
         # Generate result using deepimpact solver
 
@@ -132,8 +131,7 @@ class MainWindow(QMainWindow):
         self.ui.zero_point2.append(str(self.blast_lon))
         # radius
         for ii in range(self.damage_rad_num):
-            self.ui.table.setItem(
-                ii, 1, QTableWidgetItem(str(self.damage_rad[ii])))
+            self.ui.table.setItem(ii, 1, QTableWidgetItem(str(self.damage_rad[ii])))
         # deal with checkbox with check or not
         for ii in range(4):
             if ii < self.damage_rad_num:
@@ -147,8 +145,7 @@ class MainWindow(QMainWindow):
 
     def plot_html(self):
         map = folium.Map(
-            location=[self.blast_lat, self.blast_lon],
-            control_scale=True, zoom_start=7
+            location=[self.blast_lat, self.blast_lon], control_scale=True, zoom_start=7
         )
         # plot
         for ii in range(self.damage_rad_num):
