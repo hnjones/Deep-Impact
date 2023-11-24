@@ -13,6 +13,7 @@ import folium
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+
         # Import the UI class defined in the ui file
         self.ui = Ui_MainWindow()
         # Initialize the UI
@@ -32,7 +33,9 @@ class MainWindow(QMainWindow):
             self.ui.checkbox3,
             self.ui.checkbox4,
         ]
+
         # check table
+
         item1 = QTableWidgetItem()
         item2 = QTableWidgetItem()
         item3 = QTableWidgetItem()
@@ -45,9 +48,10 @@ class MainWindow(QMainWindow):
         self.ui.table.setCellWidget(1, 2, self.ui.checkbox2)
         self.ui.table.setCellWidget(2, 2, self.ui.checkbox3)
         self.ui.table.setCellWidget(3, 2, self.ui.checkbox4)
+
         # html interface
+
         self.ui.browser = QWebEngineView(self.ui.widget)
-        # layout = QVBoxLayout(self.ui.centralwidget)
         self.ui.browser.setGeometry(
             self.ui.widget.x(),
             self.ui.widget.y(),
@@ -56,8 +60,6 @@ class MainWindow(QMainWindow):
         )
         # layout.addWidget(self.ui.browser)
         print(self.ui.browser.size())
-        # self.ui.browser.move(10, 10)  # Set new position
-        # self.ui.browser.resize(50, 50)  # Set new size
         print(self.ui.browser.size())
         # color list
         self.circle_list = ["green", "cornflowerblue", "pink", "red"]
@@ -68,7 +70,9 @@ class MainWindow(QMainWindow):
         self.ui.checkbox2.stateChanged.connect(self.checkbox2)
         self.ui.checkbox3.stateChanged.connect(self.checkbox3)
         self.ui.checkbox4.stateChanged.connect(self.checkbox4)
+
         # button
+        
         self.ui.generate_buttom.clicked.connect(self.button_generation)
         self.ui.plot_button.clicked.connect(self.plot_html)
 
@@ -86,7 +90,9 @@ class MainWindow(QMainWindow):
             float(self.ui.bearing.text()),
         ]
 
+
         # Generate result using deepimpact solver
+
         earth = deepimpact.Planet()
         result = earth.solve_atmospheric_entry(
             radius=self.input[0],
@@ -99,6 +105,7 @@ class MainWindow(QMainWindow):
         outcome = earth.analyse_outcome(result)
 
         # Calculate the blast location and damage radius for several pressure levels
+
         pressures = [1e3, 4e3, 30e3, 50e3]
         a = deepimpact.damage_zones(
             outcome,
@@ -112,7 +119,9 @@ class MainWindow(QMainWindow):
         self.damage_rad = a[2]
 
         self.damage_rad_num = len(self.damage_rad)
+
         # Display type + zero pint + radius
+
         # zero point
         print(self.damage_rad)
         self.ui.type.clear()
@@ -135,6 +144,7 @@ class MainWindow(QMainWindow):
         self.input = []
 
     # Plots, based on the checkbox
+
     def plot_html(self):
         map = folium.Map(
             location=[self.blast_lat, self.blast_lon],
@@ -154,10 +164,9 @@ class MainWindow(QMainWindow):
         # save
         map.save("ui_map.html")
         # read
+
         with open("./ui_map.html", "r", encoding="utf-8") as file:
             html_content = file.read()
-            # print(html_content)
-        # self.ui.htmlscreen.setHtml(html_content)
         self.ui.browser.setHtml(html_content)
 
     # checkbox change

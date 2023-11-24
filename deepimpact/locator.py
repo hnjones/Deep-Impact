@@ -37,7 +37,6 @@ def great_circle_distance(latlon1, latlon2):
         print(great_circle_distance([[54.0, 0.0], [55, 0.0]], [55, 1.0]))
     [1.286e+05 6.378e+04]
     """
-
     # Ensure latlon1 and latlon2 are at least 2-dimensional
     latlon1 = np.atleast_2d(latlon1)
     latlon2 = np.atleast_2d(latlon2)
@@ -87,8 +86,7 @@ class GeospatialLocator(object):
     def __init__(
         self,
         postcode_file=os.sep.join(
-            (os.path.dirname(__file__), "..", "resources",
-             "full_postcodes.csv")
+            (os.path.dirname(__file__), "..", "resources", "full_postcodes.csv")
         ),
         census_file=os.sep.join(
             (
@@ -125,12 +123,30 @@ class GeospatialLocator(object):
         self.census = self.load_census_data()
 
     def load_postcode_data(self):
+        """
+        Load postcode data from a CSV file. Filters out invalid latitude and longitude values.
+
+        Returns
+        -------
+        pandas.DataFrame
+            A DataFrame containing the filtered postcode data with valid latitude and longitude values.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the specified postcode file does not exist.
+
+        Notes
+        -----
+        The method assumes the CSV file has columns 'Latitude' and 'Longitude' among others.
+        Only rows with latitude values between -90 and 90 and longitude values between -180 and 180 are retained.
+        """
         # Load postcode data from CSV
         if self.postcode_file:
             df = pd.read_csv(self.postcode_file)
             # filter invalid latitude and longitude values
-            df = df[df['Latitude'].between(-90, 90)]
-            df = df[df['Longitude'].between(-180, 180)]
+            df = df[df["Latitude"].between(-90, 90)]
+            df = df[df["Longitude"].between(-180, 180)]
             return df
         return pd.DataFrame()
 
@@ -161,6 +177,7 @@ class GeospatialLocator(object):
         >>> locator.get_postcodes_by_radius((51.4981, -0.1773),
                                             [1.5e3, 4.0e3])
         """
+        # Return an empty list for empty postcodes
         if self.postcodes.empty:
             return [[] for _ in radii]
 
@@ -172,8 +189,7 @@ class GeospatialLocator(object):
                 continue
 
             # Calculating distances to all postcodes
-            distances = self.norm(self.postcodes[["Latitude",
-                                                  "Longitude"]].values, [X])
+            distances = self.norm(self.postcodes[["Latitude", "Longitude"]].values, [X])
 
             # Filter postcodes within the radius
             within_radius = self.postcodes[distances[:, 0] <= radius]
@@ -182,6 +198,25 @@ class GeospatialLocator(object):
         return result
 
     def load_census_data(self):
+        """
+        Load census data from an .asc file. This file is expected to contain geographic and population data.
+
+        Returns
+        -------
+        pandas.DataFrame
+            A DataFrame containing latitude, longitude, and population data from the census file.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the specified census file does not exist.
+
+        Notes
+        -----
+        The method reads the geographic and population data assuming a specific format for the .asc file.
+        It filters out rows with 'no data' values, replacing them with a population of zero.
+        """
+        # Check if the file exists
         with open(self.census_file, "r") as file:
             # Headers
             ncols = int(file.readline().split()[1])
@@ -206,13 +241,34 @@ class GeospatialLocator(object):
             population = data[2].flatten()
 
             df = pd.DataFrame(
-                {"Latitude": latitude, "Longitude": longitude,
-                 "Population": population}
+                {"Latitude": latitude, "Longitude": longitude, "Population": population}
             )
 
         return df
 
     def find_nearest_coordinates(self, X, num_coords):
+        """
+        Find the nearest geographic coordinates from the census data to a given point.
+
+        Parameters
+        ----------
+        X : arraylike
+            A pair (tuple, list) of latitude and longitude for the reference point.
+        num_coords : int
+            The number of nearest coordinates to find.
+
+        Returns
+        -------
+        tuple
+            A tuple containing two elements:
+            1. An array of the nearest coordinates (latitude, longitude).
+            2. An array of distances from the reference point to each of these coordinates.
+
+        Notes
+        -----
+        This method uses a KDTree for efficient nearest neighbor searching.
+        The distances returned are calculated using the great_circle_distance function.
+        """
         # Convert census data to a KDTree for efficient nearest neighbor search
         tree = KDTree(self.census[["Latitude", "Longitude"]].values)
 
@@ -220,14 +276,35 @@ class GeospatialLocator(object):
         distances, indices = tree.query(X, k=num_coords)
 
         # Retrieve the nearest coordinates and their distances
-        nearest_coords = self.census.iloc[indices][["Latitude",
-                                                    "Longitude"]].values
+        nearest_coords = self.census.iloc[indices][["Latitude", "Longitude"]].values
         near_dist = [self.norm([X], [coord])[0, 0] for coord in nearest_coords]
 
         return nearest_coords, near_dist
 
-    def calculate_impacted_population(self, radius,
-                                      grid_centers, grid_distances):
+    def calculate_impacted_population(self, radius, grid_centers, grid_distances):
+        """
+        Calculate the population impacted within a specified radius around a set of grid centers.
+
+        Parameters
+        ----------
+        radius : float
+            The radius within which to calculate the impacted population.
+        grid_centers : arraylike
+            An array of latitude-longitude pairs representing grid centers.
+        grid_distances : arraylike
+            An array of distances from a reference point to each grid center.
+
+        Returns
+        -------
+        float
+            The total population impacted within the specified radius around the given grid centers.
+
+        Notes
+        -----
+        This method approximates the impacted population by considering the proportion of each grid cell's area
+        that falls within the specified radius. The population data is sourced from the census data loaded earlier.
+        """
+        # Initialize the impacted population
         impacted_populations = 0
         # Calculate the half-diagonal of the square grid
         half_diagonal = np.sqrt(2 * (500**2))
@@ -238,7 +315,7 @@ class GeospatialLocator(object):
 
             # Check if the entire circle is within a grid cell
             if distance + radius < half_diagonal:
-                intersection_percentage = (np.pi*radius**2)/(1000*1000)
+                intersection_percentage = (np.pi * radius**2) / (1000 * 1000)
                 # Retrieve the population for this grid center
                 grid_population = self.census[
                     (self.census["Latitude"] == grid_center[0])
@@ -246,7 +323,7 @@ class GeospatialLocator(object):
                 ]["Population"].values[0]
 
                 # Entire population of this grid is impacted
-                impacted_populations += intersection_percentage*grid_population
+                impacted_populations += intersection_percentage * grid_population
                 break  # No need to check other neighbors
 
             # Check if the grid intersects with the circle
@@ -258,8 +335,7 @@ class GeospatialLocator(object):
                     # Partial intersection - this is a rough approximation
                     intersection_percentage = max(
                         0,
-                        1 - (distance -
-                             (radius - half_diagonal)) / (2 * half_diagonal),
+                        1 - (distance - (radius - half_diagonal)) / (2 * half_diagonal),
                     )
 
             # Retrieve the population for the grid center from the census data
@@ -327,8 +403,9 @@ class GeospatialLocator(object):
                 )
 
             else:
-                total_population = self.census[self.census["distance"] <=
-                                               radius]["Population"].sum()
+                total_population = self.census[self.census["distance"] <= radius][
+                    "Population"
+                ].sum()
 
             populations_by_radius.append(int(total_population))
 
