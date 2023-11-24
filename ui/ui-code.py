@@ -13,9 +13,10 @@ import folium
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        # load ui file for interface
+
+        # Import the UI class defined in the ui file
         self.ui = Ui_MainWindow()
-        # initial
+        # Initialize the UI
         self.ui.setupUi(self)
         # table
         self.ui.table.setColumnWidth(0, 80)
@@ -32,7 +33,9 @@ class MainWindow(QMainWindow):
             self.ui.checkbox3,
             self.ui.checkbox4,
         ]
-        # check into table
+
+        # check table
+
         item1 = QTableWidgetItem()
         item2 = QTableWidgetItem()
         item3 = QTableWidgetItem()
@@ -45,7 +48,9 @@ class MainWindow(QMainWindow):
         self.ui.table.setCellWidget(1, 2, self.ui.checkbox2)
         self.ui.table.setCellWidget(2, 2, self.ui.checkbox3)
         self.ui.table.setCellWidget(3, 2, self.ui.checkbox4)
-        # html browser
+
+        # html interface
+
         self.ui.browser = QWebEngineView(self.ui.widget)
         self.ui.browser.setGeometry(
             self.ui.widget.x(),
@@ -65,7 +70,9 @@ class MainWindow(QMainWindow):
         self.ui.checkbox2.stateChanged.connect(self.checkbox2)
         self.ui.checkbox3.stateChanged.connect(self.checkbox3)
         self.ui.checkbox4.stateChanged.connect(self.checkbox4)
-        # connect
+
+        # button
+        
         self.ui.generate_buttom.clicked.connect(self.button_generation)
         self.ui.plot_button.clicked.connect(self.plot_html)
 
@@ -83,7 +90,9 @@ class MainWindow(QMainWindow):
             float(self.ui.bearing.text()),
         ]
 
-        # sover
+
+        # Generate result using deepimpact solver
+
         earth = deepimpact.Planet()
         result = earth.solve_atmospheric_entry(
             radius=self.input[0],
@@ -94,7 +103,9 @@ class MainWindow(QMainWindow):
         )
         result = earth.calculate_energy(result)
         outcome = earth.analyse_outcome(result)
-        # damage(input zero pint + radius)
+
+        # Calculate the blast location and damage radius for several pressure levels
+
         pressures = [1e3, 4e3, 30e3, 50e3]
         a = deepimpact.damage_zones(
             outcome,
@@ -108,7 +119,9 @@ class MainWindow(QMainWindow):
         self.damage_rad = a[2]
 
         self.damage_rad_num = len(self.damage_rad)
-        # show type + zero pint + radius result
+
+        # Display type + zero pint + radius
+
         # zero point
         print(self.damage_rad)
         self.ui.type.clear()
@@ -130,7 +143,8 @@ class MainWindow(QMainWindow):
 
         self.input = []
 
-    # plot html -- change map accoding to checkbox
+    # Plots, based on the checkbox
+
     def plot_html(self):
         map = folium.Map(
             location=[self.blast_lat, self.blast_lon],
@@ -147,9 +161,10 @@ class MainWindow(QMainWindow):
                     fillOpacity=0.1,
                 ).add_to(map)
 
-        # save html
+        # save
         map.save("ui_map.html")
-        # html browser
+        # read
+
         with open("./ui_map.html", "r", encoding="utf-8") as file:
             html_content = file.read()
         self.ui.browser.setHtml(html_content)
