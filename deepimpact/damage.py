@@ -105,9 +105,16 @@ def find_destination(lat, lon, bearing, distance):
       accordingly if the starting point is exactly at the pole.
     - The calculated longitude is adjusted to be within the range of -180
     to 180 degrees.
+
+    Examples
+    --------
+    >>> import deepimpact
+    >>> deepimpact.find_destination(52.79, -2.95, 135, 90e3)
+    (53.342, -2.95)
     """
     R = 6371000  # Radius of the Earth in meters
 
+    # Check for edge cases
     if lat < -90 or lat > 90:
         raise ValueError("The entry latitude is out of range.")
     if lon < -180 or lon > 180:
@@ -125,11 +132,13 @@ def find_destination(lat, lon, bearing, distance):
         new_lon = (new_lon + 180) % 360 - 180
         return lat, new_lon
 
+    # Calculate the new latitude
     sin_phi2 = math.sin(phi1) * math.cos(distance / R) + math.cos(
         phi1) * math.sin(distance / R) * math.cos(bearing)
 
     lat2 = math.asin(sin_phi2)
 
+    # Calculate the new longitude
     tan_lambda = (math.sin(bearing) * math.sin(distance / R) * math.cos(phi1)
                   ) / (
         math.cos(distance / R) - math.sin(phi1) * math.sin(lat2)
@@ -156,6 +165,10 @@ def airblast_func(r, z_b, E_k, pressure):
 
     Returns:
     - The value of the airblast function at the given radius.
+
+    Examples:
+    >>> airblast_func(1e3, z_b=8e3, E_k=7e3, pressure=30e3)
+    0.0
     """
     term1 = 3e11 * np.power((r**2 + z_b**2) / np.power(E_k, 2 / 3), -1.3)
     term2 = 2e7 * np.power((r**2 + z_b**2) / np.power(E_k, 2 / 3), -0.57)
@@ -177,10 +190,21 @@ def brents_method(z_b, E_k, pressure, x0, x1, max_iter=100, tolerance=1e-5):
 
     Returns:
     - The root of the function within the given interval.
+
+    Notes
+    -----
+    This function is adapted from the pseudocode provided in the Wikipedia
+    article on Brent's method.
+
+    Examples:
+    >>> brents_method(z_b=8e3, E_k=7e3, pressure=30e3, x0=0, x1=1e9)
+    0.0
     """
+
     fx0 = airblast_func(x0, z_b=z_b, E_k=E_k, pressure=pressure)
     fx1 = airblast_func(x1, z_b=z_b, E_k=E_k, pressure=pressure)
-
+    
+    # Check if the root is within the interval
     if fx0 * fx1 >= 0:
         return 0
 
@@ -198,15 +222,18 @@ def brents_method(z_b, E_k, pressure, x0, x1, max_iter=100, tolerance=1e-5):
         fx1 = airblast_func(x1, z_b=z_b, E_k=E_k, pressure=pressure)
         fx2 = airblast_func(x2, z_b=z_b, E_k=E_k, pressure=pressure)
 
+        # Check if the result converge, then use inverse interpolation
         if fx0 != fx2 and fx1 != fx2:
             L0 = (x0 * fx1 * fx2) / ((fx0 - fx1) * (fx0 - fx2))
             L1 = (x1 * fx0 * fx2) / ((fx1 - fx0) * (fx1 - fx2))
             L2 = (x2 * fx1 * fx0) / ((fx2 - fx0) * (fx2 - fx1))
             new = L0 + L1 + L2
 
+        # Otherwise use scant method
         else:
             new = x1 - ((fx1 * (x1 - x0)) / (fx1 - fx0))
 
+        # Check if the result is within the interval, use bisection method
         if (
             (new < ((3 * x0 + x1) / 4) or new > x1)
             or (mflag is True and (abs(new - x1)) >= (abs(x1 - x2) / 2))
@@ -248,7 +275,13 @@ def calculate_damage_radius(target_pressures, z_b, E_k):
 
     Returns:
     radii (list): List of damage radii corresponding to each target pressure.
+
+    Examples:
+    >>> calculate_damage_radius([1e3, 4e3, 30e3, 50e3], z_b=8e3, E_k=7e3)
+    [0.0, 0.0, 0.0, 0.0]
     """
+
+    # Create an empty list to store the radii and iterate through the target_pressures
     radii = []
     for i in target_pressures:
         radius = brents_method(z_b, E_k, i, 0, 1e9)
@@ -300,6 +333,13 @@ def impact_risk(
         A dictionary containing the mean and standard deviation of the
         population affected by the impact, with keys 'mean' and 'stdev'.
         Values are floats.
+
+    Examples:
+    >>> import deepimpact
+    >>> planet = deepimpact.Planet()
+    >>> impact_risk(planet, impact_file="impact_parameter_list.csv",
+                    pressure=30e3, nsamples=10)
+    (Postcode  probability)
     """
     # check input
     if not isinstance(pressure, (int, float, complex)):
@@ -324,6 +364,7 @@ def impact_risk(
         result = planet.calculate_energy(result)
         outcome = planet.analyse_outcome(result)
 
+        # calculate the damage radius and surface zero point
         blast_lat, blast_lon, damage_rad = damage_zones(
             outcome,
             lat=data.loc[i, "entry latitude"],
@@ -332,6 +373,7 @@ def impact_risk(
             pressures=[pressure],
         )
 
+        # get the postcode and population in the damage radius
         locators = deepimpact.GeospatialLocator()
         postcodes = locators.get_postcodes_by_radius(
             (blast_lat, blast_lon), radii=damage_rad
