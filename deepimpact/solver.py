@@ -380,13 +380,13 @@ class Planet:
         outcome : Dict
             Dictionary with details of the impact event. This should contain
             the key:
-            
-            ``outcome`` 
-                which should contain one of the following strings: 
+
+            ``outcome``
+                which should contain one of the following strings:
                 ``Airburst`` or ``Cratering``,
-            
+
             and also the following 4 keys:
-            
+
             ``burst_peak_dedz``, ``burst_altitude``,
             ``burst_distance``, ``burst_energy``.
         """
