@@ -13,7 +13,7 @@ import folium
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        # load ui file for interface 
+        # load ui file for interface
         self.ui = Ui_MainWindow()
         # initial
         self.ui.setupUi(self)
@@ -108,7 +108,7 @@ class MainWindow(QMainWindow):
         self.damage_rad = a[2]
 
         self.damage_rad_num = len(self.damage_rad)
-        # show type + zero pint + radius result  
+        # show type + zero pint + radius result
         # zero point
         print(self.damage_rad)
         self.ui.type.clear()
@@ -130,7 +130,7 @@ class MainWindow(QMainWindow):
 
         self.input = []
 
-    # plot html -- change map accoding to checkbox 
+    # plot html -- change map accoding to checkbox
     def plot_html(self):
         map = folium.Map(
             location=[self.blast_lat, self.blast_lon],
